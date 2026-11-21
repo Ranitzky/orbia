@@ -30,7 +30,10 @@ func fixture(t *testing.T) (*Store, *Server) {
 	}); e != nil {
 		t.Fatal(e)
 	}
-	return s, NewServer(s, Config{Password: testPassword})
+	server := NewServer(s, Config{})
+	w := request(server, "POST", "/auth/setup", fmt.Sprintf(`{"code":%q,"mode":"password","password":%q}`, server.auth.setupCode, testPassword), false)
+	expectStatus(t, w, 200)
+	return s, server
 }
 func request(s *Server, method, path, body string, authorized bool) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, path, strings.NewReader(body))

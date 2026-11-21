@@ -2,10 +2,10 @@ package app
 
 import (
 	"crypto/hmac"
-	"crypto/pbkdf2"
+
 	"crypto/rand"
 	"crypto/sha256"
-	"crypto/subtle"
+
 	"encoding/base64"
 	"fmt"
 	"net/http"
@@ -17,9 +17,10 @@ import (
 )
 
 type auth struct {
-	passwordHash []byte
-	salt         []byte
-	key          []byte
+	store     *Store
+	setupCode string
+	accessMu  sync.Mutex
+	key       []byte
 
 	secure   bool
 	origin   string
@@ -29,13 +30,10 @@ type auth struct {
 	sessions map[string]int64
 }
 
-func newAuth(password string, secure bool, origin string) *auth {
-	salt := make([]byte, 32)
+func newAuth(store *Store, secure bool, origin string) *auth {
 	key := make([]byte, 32)
-	rand.Read(salt)
 	rand.Read(key)
-	hash, _ := pbkdf2.Key(sha256.New, password, salt, 210000, 32)
-	return &auth{passwordHash: hash, salt: salt, key: key, secure: secure, origin: strings.TrimRight(origin, "/"), sessions: map[string]int64{}}
+	return &auth{store: store, setupCode: rand.Text(), key: key, secure: secure, origin: strings.TrimRight(origin, "/"), sessions: map[string]int64{}}
 }
 func (a *auth) signature(v string) string {
 	h := hmac.New(sha256.New, a.key)
@@ -83,44 +81,7 @@ func (a *auth) sameOrigin(r *http.Request) bool {
 	u, e := url.Parse(origin)
 	return e == nil && u.Host == r.Host && (u.Scheme == "http" || u.Scheme == "https")
 }
-func (a *auth) login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		w.WriteHeader(405)
-		return
-	}
-	if !a.sameOrigin(r) {
-		writeError(w, 403, "Cross-origin request rejected.")
-		return
-	}
-	// A global bucket avoids trusting spoofable proxy headers or growing an IP map.
-	a.mu.Lock()
-	if time.Since(a.window) > time.Minute {
-		a.window = time.Now()
-		a.failures = 0
-	}
-	if a.failures >= 10 {
-		a.mu.Unlock()
-		w.Header().Set("Retry-After", "60")
-		writeError(w, 429, "Too many attempts. Try again in one minute.")
-		return
-	}
-	a.failures++
-	a.mu.Unlock()
-	var in struct {
-		Password string `json:"password"`
-	}
-	if e := decode(w, r, &in, 4096); e != nil {
-		writeError(w, 400, "Invalid request.")
-		return
-	}
-	hash, _ := pbkdf2.Key(sha256.New, in.Password, a.salt, 210000, 32)
-	if subtle.ConstantTimeCompare(hash, a.passwordHash) != 1 {
-		writeError(w, 401, "Incorrect password.")
-		return
-	}
-	a.mu.Lock()
-	a.failures = 0
-	a.mu.Unlock()
+func (a *auth) issueSession(w http.ResponseWriter) {
 	nonce := make([]byte, 24)
 	rand.Read(nonce)
 	nonceText := base64.RawURLEncoding.EncodeToString(nonce)

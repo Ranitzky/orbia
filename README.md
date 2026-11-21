@@ -7,9 +7,8 @@ Orbia is a self-hosted keyboard launcher and bookmark library for one person. Th
 ## Run on Unraid
 
 1. Copy the project to your server and copy `.env.example` to `.env`.
-2. Set a unique `ORBIA_PASSWORD` of at least 12 characters for web login. Generate client tokens in Settings after signing in.
-3. Create `/mnt/user/appdata/orbia` and give the configured UID/GID write access. The example uses Unraid's `99:100`. Use local storage with SQLite locking support.
-4. Start the service from the project directory.
+2. Create `/mnt/user/appdata/orbia` and give the configured UID/GID write access. The example uses Unraid's `99:100`. Use local storage with SQLite locking support.
+3. Start the service from the project directory.
 
 ```sh
 docker compose config --quiet
@@ -17,7 +16,11 @@ docker compose up -d --build --wait
 docker compose ps
 ```
 
-Open `http://<unraid-host>:8080`. New databases start with a **Home** dashboard linking to Amazon, eBay, Gmail, GitHub, Booking.com, Figma, and Notion. Use **Cmd/Ctrl+E** to edit the quicklinks. The bookmark library starts empty. Set `ORBIA_SEED_DEMO=true` to populate an empty library with six English-language example bookmarks, then switch it off to keep an emptied library empty on restart. Upgrades preserve your saved dashboard and bookmarks.
+Open `http://<unraid-host>:8080`. On first launch, copy the current `setup_code` from the Orbia container log (on Unraid, **Docker → Orbia → Logs**) into **Set up Orbia**. Choose a password of at least 12 characters or explicitly choose **Without a password**. Until setup finishes, restarting Orbia generates a fresh code. Existing installations upgrading from environment-based passwords also complete this step once.
+
+In **Settings → Access**, enter your current password to change or remove it. You can enable password protection again there. Saving the access settings signs out other browser sessions. In passwordless mode, anyone who can reach Orbia can open a session and manage bookmarks, tokens and access settings. Use it only on a trusted network or behind an authenticated proxy.
+
+New databases start with a **Home** dashboard linking to Amazon, eBay, Gmail, GitHub, Booking.com, Figma, and Notion. Use **Cmd/Ctrl+E** to edit the quicklinks. The bookmark library starts empty. Set `ORBIA_SEED_DEMO=true` to populate an empty library with six English-language example bookmarks, then switch it off to keep an emptied library empty on restart. Upgrades preserve your saved dashboard and bookmarks.
 
 For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PGID` to the owner of that directory, and bind to `127.0.0.1`. The container runs as that user with a read-only root filesystem. Compose persists the database under `/data`. The HTTP healthcheck uses `/healthz`.
 
@@ -29,7 +32,7 @@ For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PG
 | `ORBIA_SECURE_COOKIE` | Set to `true` when serving over HTTPS. |
 | `ORBIA_DB`, `ORBIA_ADDR` | Native process database path and listen address. Compose supplies `/data/orbia.db` and `:8080`. |
 
-Serve Orbia at the root of its own domain. Preserve the Host header and pass `/api/` token requests through the proxy. Browser sessions expire after 24 hours or on server restart. Change the web password in the environment and recreate the container to apply it. Use HTTPS when accessing Orbia across a network so that passwords and API tokens are encrypted in transit.
+Serve Orbia at the root of its own domain. Preserve the Host header and pass `/api/` token requests through the proxy. Browser sessions expire after 24 hours or on server restart. Use HTTPS when accessing Orbia across a network so that passwords and API tokens are encrypted in transit.
 
 ## Interface language
 
@@ -71,7 +74,7 @@ For a full backup with stable IDs, stop the container, copy its **entire** data 
 
 ## Develop and test
 
-A native build requires Go 1.26+, a C compiler, SQLite headers and a library with FTS5. On Debian/Ubuntu install `build-essential libsqlite3-dev`. Export `ORBIA_PASSWORD` before running `go run ./cmd/orbia`. The native process reads its environment. Compose reads `.env`.
+A native build requires Go 1.26+, a C compiler, SQLite headers and a library with FTS5. On Debian/Ubuntu install `build-essential libsqlite3-dev`. Run `go run ./cmd/orbia` and use the setup code printed to the server log. The native process reads its environment. Compose reads `.env`.
 
 ```sh
 go test -race ./...

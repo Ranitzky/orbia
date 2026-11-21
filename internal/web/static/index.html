@@ -22,7 +22,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="/style.css?v=7" />
-    <script src="/app.js?v=9" type="module"></script>
+    <script src="/app.js?v=10" type="module"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Zum Inhalt</a>
@@ -82,7 +82,7 @@
     </svg>
 
     <section id="login" class="login-screen" hidden>
-      <form id="login-form" class="login-card">
+      <form id="login-form" class="login-card" method="post">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true">[ ]</span
           ><span>Orbia</span>
@@ -100,6 +100,13 @@
         <p id="login-error" class="form-error" role="alert"></p>
         <button class="button primary" type="submit">Orbia öffnen</button>
       </form>
+    </section>
+
+    <section id="setup-screen" class="login-screen" hidden>
+      <div class="login-card" id="setup-container">
+        <h1>Orbia einrichten</h1>
+        <p class="login-intro">Den einmaligen Einrichtungscode findest du im Orbia-Container-Log oder in der Serverausgabe.</p>
+      </div>
     </section>
 
     <div id="app" class="shell" hidden>
@@ -414,6 +421,22 @@
           <option value="de" lang="de">Deutsch</option>
           <option value="en" lang="en">English</option>
         </select>
+      </section>
+      <section class="settings-section" id="access-settings">
+        <h3>Zugriff</h3>
+        <form id="access-form" class="integration-form" method="post">
+          <div id="setup-code-field" hidden><label for="setup-code">Einrichtungscode</label>
+            <input id="setup-code" type="password" autocomplete="one-time-code" /></div>
+          <div id="current-password-field" hidden><label for="current-password">Aktuelles Passwort</label>
+            <input id="current-password" type="password" autocomplete="current-password" /></div>
+          <label for="access-mode">Anmeldung</label>
+          <select id="access-mode"><option value="password">Mit Passwort</option><option value="open">Ohne Passwort</option></select>
+          <p id="open-access-hint" hidden>Jeder mit Zugriff auf diese Adresse kann deine Bookmarks, App-Tokens und Einstellungen verwalten.</p>
+          <div id="new-password-field"><label for="new-password">Neues Passwort (mindestens 12 Zeichen)</label>
+            <input id="new-password" type="password" minlength="12" autocomplete="new-password" /></div>
+          <button type="submit" class="button">Zugriff speichern</button>
+          <p id="access-status" class="small" role="status"></p>
+        </form>
       </section>
       <section class="settings-section">
         <h3>Darstellung</h3>

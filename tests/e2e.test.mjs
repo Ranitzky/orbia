@@ -13,7 +13,7 @@ const { chromium, webkit } = await import(
     ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href
     : "playwright"
 );
-let browser, server, origin, temporary, context;
+let browser, server, origin, temporary, context, setupOrigin, setupCode;
 const errors = [];
 
 before(
@@ -34,6 +34,7 @@ before(
     const output = createInterface({ input: server.stdout });
     origin = await new Promise((resolve, reject) => {
       output.on("line", (line) => {
+        if (line.startsWith("SETUP ")) [, setupOrigin, setupCode] = line.split(" ");
         if (line.startsWith("http://")) resolve(line);
       });
       server.once("error", reject);
@@ -626,4 +627,49 @@ test("settings issue and revoke client credentials and import from Linkding", as
   await page.getByRole("button", {name:"Close settings"}).click();
   await page.locator("#nav-bookmarks").click();
   await page.getByText("Imported via settings", {exact:true}).waitFor();
+});
+
+test("first-run setup, passwordless access and password changes in Settings", async () => {
+  const owner = await browser.newContext();
+  const guest = await browser.newContext();
+  try {
+    const page = await owner.newPage();
+    await page.goto(setupOrigin);
+    await page.getByLabel("Setup code").fill(setupCode);
+    const mode = page.getByLabel("Sign-in method");
+    const save = page.getByRole("button", {name: "Save access settings"});
+    await mode.selectOption("open");
+    await save.click();
+    await page.locator("#app").waitFor();
+    const other = await guest.newPage();
+    await other.goto(setupOrigin);
+    await other.locator("#app").waitFor();
+    const settings = page.getByRole("button", {name:"Settings",exact:true});
+    await settings.click();
+    await mode.selectOption("password");
+    await page.getByLabel("New password").fill("test-owner-password");
+    await save.click();
+    await page.getByText("Access settings saved.").waitFor();
+    await other.reload();
+    await other.getByRole("button", {name:"Open Orbia"}).waitFor();
+    await page.getByLabel("Current password").fill("incorrect-password");
+    await page.getByLabel("New password").fill("replacement-password");
+    await save.click();
+    await page.getByText("Incorrect current password.").waitFor();
+    await page.getByLabel("Current password").fill("test-owner-password");
+    await save.click();
+    await page.getByText("Access settings saved.").waitFor();
+    await other.getByLabel("Password",{exact:true}).fill("replacement-password");
+    await other.getByRole("button",{name:"Open Orbia"}).click();
+    await other.locator("#app").waitFor();
+    await page.getByLabel("Current password").fill("replacement-password");
+    await mode.selectOption("open");
+    await save.click();
+    await page.getByText("Access settings saved.").waitFor();
+    await other.reload();
+    await other.locator("#app").waitFor();
+  } finally {
+    await owner.close();
+    await guest.close();
+  }
 });

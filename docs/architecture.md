@@ -46,11 +46,11 @@ Dashboard writes include the revision that was read. A stale update returns 409;
 - `internal/app/transfer.go`: consistent export and transactional merge import.
 - `internal/web`: buildless browser application and local assets.
 
-New database migrations should advance `PRAGMA user_version`. The server refuses a database created by a newer schema. Back up the database before upgrading. Schema version 3 retains tokens issued through Settings.
+New database migrations should advance `PRAGMA user_version`. The server refuses a database created by a newer schema. Back up the database before upgrading. Schema version 4 adds persisted web access settings.
 
 ## Authentication and deployment
 
-The owner sets the sign-in password through the environment. The web password is compared using PBKDF2-HMAC-SHA256 with a random process salt and 210,000 iterations. Settings generates 256-bit random app tokens and returns each secret once. SQLite indexes their SHA-256 digests. App tokens grant access to the Linkding client routes. Sessions expire after 24 hours, are HttpOnly and SameSite Strict, and can be revoked on logout. The registry holds at most 32 sessions. Restarting the process invalidates all browser sessions. Token creation and revocation take effect immediately. Password changes take effect at restart.
+The first-run UI verifies a random setup code printed to the server log and records an explicit password or passwordless choice. SQLite stores a salted PBKDF2-HMAC-SHA256 verifier (210,000 iterations) when password protection is enabled. Passwordless browsers acquire ordinary same-origin sessions. Settings generates 256-bit random app tokens and returns each secret once. SQLite indexes their SHA-256 digests. App tokens grant access to the Linkding client routes. Sessions expire after 24 hours, are HttpOnly and SameSite Strict, and can be revoked on logout. The registry holds at most 32 sessions. Restarting the process invalidates all browser sessions. Token creation and revocation take effect immediately. Changing the access settings verifies the current password when enabled, invalidates outstanding browser sessions and issues a fresh session to the owner.
 
 Token management and remote imports require a browser session. The Settings import fetches fixed bookmark paths and rejects redirects. HTTPS uses normal certificate verification. Plain HTTP uses a separate proxy-free transport. Each new connection resolves the host, checks every result for a private or loopback address, and dials an approved numeric IP directly. Mixed public/private DNS responses and link-local addresses are rejected before an authenticated request can be sent. The source token stays in request memory.
 

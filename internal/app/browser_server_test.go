@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -24,6 +25,15 @@ func TestBrowserServer(t *testing.T) {
 	handler.sourceClient.Transport = handlerTransport{sourceAPI}
 	server := httptest.NewServer(handler)
 	defer server.Close()
+	freshStore, err := NewStore(filepath.Join(t.TempDir(), "fresh.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer freshStore.DB.Close()
+	fresh := NewServer(freshStore, Config{})
+	onboarding := httptest.NewServer(fresh)
+	defer onboarding.Close()
+	fmt.Println("SETUP", onboarding.URL, fresh.auth.setupCode)
 	fmt.Println(server.URL)
 	_, _ = io.Copy(io.Discard, os.Stdin)
 }

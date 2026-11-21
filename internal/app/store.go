@@ -92,7 +92,7 @@ func NewStore(path string) (*Store, error) {
 			return e
 		}
 		version := rows[0].Int("user_version")
-		if version > 3 {
+		if version > 4 {
 			return errors.New("database schema is newer than this application")
 		}
 		if version == 2 {
@@ -114,7 +114,8 @@ func NewStore(path string) (*Store, error) {
 			`CREATE TRIGGER IF NOT EXISTS search_delete AFTER DELETE ON bookmarks BEGIN INSERT INTO bookmark_search(bookmark_search,rowid,title,description,notes,url) VALUES('delete',old.id,old.title,old.description,old.notes,old.url); END`,
 			`CREATE TRIGGER IF NOT EXISTS search_update AFTER UPDATE ON bookmarks BEGIN INSERT INTO bookmark_search(bookmark_search,rowid,title,description,notes,url) VALUES('delete',old.id,old.title,old.description,old.notes,old.url); INSERT INTO bookmark_search(rowid,title,description,notes,url) VALUES(new.id,new.title,new.description,new.notes,new.url); END`,
 			`CREATE TABLE IF NOT EXISTS dashboard(id INTEGER PRIMARY KEY CHECK(id=1),revision INTEGER NOT NULL,payload TEXT NOT NULL)`,
-			`PRAGMA user_version=3`,
+			`CREATE TABLE IF NOT EXISTS web_access(id INTEGER PRIMARY KEY CHECK(id=1), credential TEXT NOT NULL)`,
+			`PRAGMA user_version=4`,
 		} {
 			if _, e := c.Exec(q); e != nil {
 				return e

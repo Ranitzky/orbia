@@ -34,10 +34,6 @@ func run() error {
 	if len(os.Args) != 1 {
 		return errors.New("usage: orbia")
 	}
-	password := os.Getenv("ORBIA_PASSWORD")
-	if len(password) < 12 {
-		return errors.New("set ORBIA_PASSWORD (12+ characters); see .env.example")
-	}
 	path := env("ORBIA_DB", "./data/orbia.db")
 	if e := os.MkdirAll(filepath.Dir(path), 0700); e != nil {
 		return e
@@ -62,7 +58,10 @@ func run() error {
 			return errors.New("ORBIA_ORIGIN must be an http(s) origin without a path, credentials, query or fragment")
 		}
 	}
-	handler := app.NewServer(store, app.Config{Password: password, Origin: origin, SecureCookie: os.Getenv("ORBIA_SECURE_COOKIE") == "true"})
+	handler := app.NewServer(store, app.Config{Origin: origin, SecureCookie: os.Getenv("ORBIA_SECURE_COOKIE") == "true"})
+	if err := handler.LogSetupCode(); err != nil {
+		return err
+	}
 	server := &http.Server{Addr: env("ORBIA_ADDR", ":8080"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 60 * time.Second, WriteTimeout: 120 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 32 << 10}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

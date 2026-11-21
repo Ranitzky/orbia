@@ -18,8 +18,8 @@ import (
 )
 
 type Config struct {
-	Password, Origin string
-	SecureCookie     bool
+	Origin       string
+	SecureCookie bool
 }
 type Server struct {
 	store        *Store
@@ -32,7 +32,7 @@ type Server struct {
 func NewServer(s *Store, c Config) *Server {
 	assets, _ := fs.Sub(web.Files, "static")
 	return &Server{
-		store: s, auth: newAuth(c.Password, c.SecureCookie, c.Origin), static: http.FileServer(http.FS(assets)),
+		store: s, auth: newAuth(s, c.SecureCookie, c.Origin), static: http.FileServer(http.FS(assets)),
 		sourceClient: newLinkdingClient(),
 	}
 }
@@ -84,9 +84,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]string{"status": "ok"})
 		return
 	}
-	if path == "/auth/login" {
+	if path == "/auth/login" || path == "/auth/status" || path == "/auth/setup" || path == "/auth/password" {
 		w.Header().Set("Cache-Control", "no-store")
-		s.auth.login(w, r)
+		s.auth.webAccess(w, r)
 		return
 	}
 	if strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/auth/") {

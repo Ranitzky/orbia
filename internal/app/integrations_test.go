@@ -52,7 +52,7 @@ func TestSettingsTokens(t *testing.T) {
 			t.Fatalf("unexpected client status %d", w.Code)
 		}
 	}
-	restarted := NewServer(store, Config{Password: testPassword})
+	restarted := NewServer(store, Config{})
 	check(restarted, token, 200)
 	var entries []struct {
 		ID   int64

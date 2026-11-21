@@ -64,7 +64,7 @@ async function setLanguage(value, persist = false) {
   const select = $("#language");
   select.disabled = true;
   try {
-    english = value === "en" ? (await import("./en.js?v=3")).default : null;
+    english = value === "en" ? (await import("./en.js?v=4")).default : null;
   } catch {
     select.value = document.documentElement.lang;
     toast("Die Sprachdatei konnte nicht geladen werden. / Could not load the language file.", true);
@@ -161,7 +161,11 @@ async function api(path, options = {}) {
   }
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    if (response.status === 401 && !path.startsWith("/auth/")) showLogin();
+    if (response.status === 401 && !path.startsWith("/auth/")) {
+      const refreshAccess = state.authenticated;
+      showLogin();
+      if (refreshAccess) void start();
+    }
     let message = errorMessage(response.status, data);
     if (path === pullPath) {
       if (response.status === 400) message = t("Bitte gib eine HTTP- oder HTTPS-Adresse und den Linkding-Token ein.");
@@ -180,6 +184,7 @@ async function api(path, options = {}) {
 }
 function showLogin() {
   state.authenticated = false;
+  $("#setup-screen").hidden = true;
   closeDialogs();
   $("#app").hidden = true;
   $("#login").hidden = false;
@@ -956,6 +961,7 @@ function clearNewToken() {
 }
 $("#settings-dialog").addEventListener("close", () => {
   settingsGeneration++;
+  $("#access-form").reset();
   clearNewToken();
   $("#source-token").value = "";
 });
@@ -998,7 +1004,64 @@ $("#pull-form").addEventListener("submit", async event => {
   }
 });
 
+function updateAccessFields() {
+  const needsPassword = $("#access-mode").value === "password";
+  $("#new-password").required = needsPassword;
+  $("#new-password").disabled = !needsPassword;
+  $("#new-password-field").hidden = !needsPassword;
+  $("#open-access-hint").hidden = needsPassword;
+}
+function prepareAccessForm(setup) {
+  const form = $("#access-form");
+  form.reset();
+  $("#access-status").textContent = "";
+  $(setup ? "#setup-container" : "#access-settings").append(form);
+  $("#setup-code-field").hidden = !setup;
+  $("#setup-code").required = setup;
+  const current = !setup && state.accessMode === "password";
+  $("#current-password-field").hidden = !current;
+  $("#current-password").required = current;
+  $("#access-mode").value = state.accessMode === "open" ? "open" : "password";
+  updateAccessFields();
+}
+$("#access-mode").addEventListener("change", updateAccessFields);
+$("#access-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const setup = state.accessMode === "setup";
+  const button = event.currentTarget.querySelector("button");
+  button.disabled = true;
+  const mode = $("#access-mode").value;
+  const payload = {
+    mode,
+    password: mode === "password" ? $("#new-password").value : "",
+    current: $("#current-password").value,
+    code: $("#setup-code").value.trim(),
+  };
+  integrationStatus("#access-status", "");
+  try {
+    await api(setup ? "/auth/setup" : "/auth/password", {method: "POST", body: JSON.stringify(payload)});
+    state.accessMode = mode;
+    prepareAccessForm(false);
+    if (setup) await start();
+    else {
+      $('[data-action="logout"]').hidden = mode === "open";
+      integrationStatus("#access-status", t("Zugriff geändert."));
+    }
+  } catch (error) {
+    if (error.status === 409 || error.status === 401) {
+      await start();
+    } else {
+      integrationStatus("#access-status", error.status === 403
+        ? t(setup ? "Der Einrichtungscode stimmt nicht." : "Das aktuelle Passwort stimmt nicht.")
+        : error.message, true);
+    }
+  } finally {
+    button.disabled = false;
+  }
+});
+
 function openSettings() {
+  prepareAccessForm(false);
   settingsGeneration++;
   tokenEntries = [];
   renderTokens();
@@ -1356,7 +1419,22 @@ document.addEventListener("keydown", (event) => {
 });
 async function start() {
   try {
-    await api("/api/orbia/session");
+    const access = await api("/auth/status");
+    state.accessMode = access.mode;
+    $("#setup-screen").hidden = access.mode !== "setup";
+    if (access.mode === "setup") {
+      state.authenticated = false;
+      $("#app").hidden = true;
+      $("#login").hidden = true;
+      prepareAccessForm(true);
+      $("#setup-code").focus();
+      return;
+    }
+    if (!access.authenticated) {
+      if (access.mode === "password") { showLogin(); return; }
+      await api("/auth/login", {method: "POST", body: "{}"});
+    }
+    $('[data-action="logout"]').hidden = access.mode === "open";
     await loadDashboard();
     state.authenticated = true;
     $("#login").hidden = true;
