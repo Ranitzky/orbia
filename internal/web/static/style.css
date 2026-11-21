@@ -6,6 +6,7 @@
 }
 :root {
   color-scheme: dark;
+  scrollbar-gutter: stable both-edges;
   --bg: #090f12;
   --panel: #0c1317;
   --panel-hover: #111c21;

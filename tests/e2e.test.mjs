@@ -45,6 +45,7 @@ before(
     const engine = process.env.ORBIA_BROWSER === "webkit" ? webkit : chromium;
     browser = await engine.launch({
       headless: true,
+      ...(engine === chromium ? { ignoreDefaultArgs: ["--hide-scrollbars"] } : {}),
       ...(process.env.PLAYWRIGHT_EXECUTABLE
         ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE }
         : {}),
@@ -97,6 +98,37 @@ test("main navigation highlights only the current view", async () => {
     assert.deepEqual(await nav.locator(".active").allTextContents(), [name]);
     assert.deepEqual(await nav.locator('[aria-current="page"]').allTextContents(), [name]);
   }
+});
+
+test("switching to scrollable bookmarks preserves the content position and width", async () => {
+  const page = await pageFor();
+  // Keep the overflow independent of the number of seeded bookmarks.
+  await page.addStyleTag({ content: "#bookmark-view { min-height: 120vh; }" });
+  const classicScrollbar = browser.browserType().name() === "chromium";
+  if (classicScrollbar) {
+    // Use a classic scrollbar even on systems that default to overlay scrollbars.
+    await page.addStyleTag({ content: "html::-webkit-scrollbar { width: 16px; }" });
+  }
+  const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
+  const layout = () => page.locator("#main").evaluate((main) => {
+    const { left, width } = main.getBoundingClientRect();
+    const root = document.scrollingElement;
+    return { left, width, scrollable: root.scrollHeight > root.clientHeight };
+  });
+
+  const dashboard = await layout();
+  assert.equal(dashboard.scrollable, false);
+
+  await nav.getByRole("button", { name: "Bookmarks", exact: true }).click();
+  await page.locator(".bookmark-card").first().waitFor();
+  if (classicScrollbar) {
+    assert.ok(await page.evaluate(() => document.documentElement.clientWidth < innerWidth));
+  }
+  assert.deepEqual(await layout(), { ...dashboard, scrollable: true });
+
+  await nav.getByRole("button", { name: "Dashboard", exact: true }).click();
+  await page.locator("#dashboard-view").waitFor();
+  assert.deepEqual(await layout(), dashboard);
 });
 
 test("dashboard and bookmark cards retain their responsive layout", async () => {
