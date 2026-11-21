@@ -441,6 +441,7 @@ main:focus {
   flex-direction: column;
 }
 .quicklink {
+  --quicklink-glow: color-mix(in srgb, var(--group-color), transparent 85%);
   display: flex;
   align-items: center;
   gap: 20px;
@@ -496,7 +497,8 @@ main:focus {
   margin-left: auto;
   transition:
     transform 0.18s,
-    color 0.18s;
+    color 0.18s,
+    filter 0.18s;
 }
 .quicklink:is(:hover, :focus-visible, .matched) {
   background: color-mix(in srgb, var(--group-color), transparent 92%);
@@ -505,10 +507,15 @@ main:focus {
 .quicklink.matched .quick-code {
   color: var(--group-color);
   border-color: var(--group-color);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--group-color), transparent 85%);
+  box-shadow: 0 0 18px var(--quicklink-glow);
 }
 .quicklink:hover svg {
   color: var(--group-color);
+}
+.quicklink:hover svg:has(use[href="#i-arrow"]) {
+  filter: drop-shadow(0 0 9px var(--quicklink-glow));
+}
+.quicklink:hover svg:has(use[href="#i-edit"]) {
   transform: translateX(2px);
 }
 .quicklink.dimmed {
