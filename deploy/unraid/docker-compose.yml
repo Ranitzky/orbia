@@ -1,0 +1,8 @@
+services:
+  orbia:
+    image: ghcr.io/ranitzky/orbia:latest
+    restart: unless-stopped
+    ports:
+      - "8726:8726"
+    volumes:
+      - /mnt/user/appdata/orbia:/data

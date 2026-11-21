@@ -6,24 +6,13 @@ Orbia is a self-hosted keyboard launcher and bookmark library for one person. Th
 
 ## Run on Unraid
 
-Copy the project to your server and start it from the directory containing the Dockerfile. The included Compose file uses port 8726 and stores SQLite data in `/mnt/user/appdata/orbia` by default. An `.env` file is optional.
+Save [docker-compose.yml](deploy/unraid/docker-compose.yml) on your Unraid server. The file pulls the Linux AMD64 image from GitHub Container Registry and uses port 8726 and `/mnt/user/appdata/orbia` for SQLite data.
 
 ```sh
-docker compose up -d --build --wait
+docker compose up -d --pull always --wait
 ```
 
-For a minimal standalone Compose file in that same project directory:
-
-```yaml
-services:
-  orbia:
-    build: .
-    restart: unless-stopped
-    ports:
-      - "8726:8726"
-    volumes:
-      - /mnt/user/appdata/orbia:/data
-```
+Run the same command to update. The `latest` tag tracks validated builds from `main`. To pin a build, replace `latest` with the full published Git commit SHA. For local development, the repository's root `compose.yaml` still builds from source.
 
 Docker creates a missing bind-mount directory. At startup, the entrypoint prepares the dedicated directory and existing Orbia SQLite files for UID 99 and GID 100, then runs the server as that user. This also fixes a root-owned directory from an earlier attempt. SQLite needs write access to the directory for its WAL and shared-memory files. Use a writable local filesystem with SQLite locking support. If you explicitly set Compose `user:` to a non-root user, prepare the host permissions yourself.
 
