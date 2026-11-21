@@ -83,6 +83,17 @@ async function command(page, text) {
   await page.keyboard.press("Enter");
 }
 
+test("main navigation highlights only the current view", async () => {
+  const page = await pageFor();
+  const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
+  for (const name of ["Bookmarks", "Dashboard"]) {
+    await nav.getByRole("button", { name, exact: true }).click();
+    await page.locator(name === "Bookmarks" ? "#bookmark-view" : "#dashboard-view").waitFor();
+    assert.deepEqual(await nav.locator(".active").allTextContents(), [name]);
+    assert.deepEqual(await nav.locator('[aria-current="page"]').allTextContents(), [name]);
+  }
+});
+
 test("dashboard and bookmark cards retain their responsive layout", async () => {
   const page = await pageFor();
   if (process.env.ORBIA_SCREENSHOTS) {
