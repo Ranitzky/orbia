@@ -22,7 +22,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="/style.css?v=7" />
-    <script src="/app.js?v=10" type="module"></script>
+    <script src="/app.js?v=11" type="module"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Zum Inhalt</a>
@@ -105,7 +105,6 @@
     <section id="setup-screen" class="login-screen" hidden>
       <div class="login-card" id="setup-container">
         <h1>Orbia einrichten</h1>
-        <p class="login-intro">Den einmaligen Einrichtungscode findest du im Orbia-Container-Log oder in der Serverausgabe.</p>
       </div>
     </section>
 
@@ -425,8 +424,6 @@
       <section class="settings-section" id="access-settings">
         <h3>Zugriff</h3>
         <form id="access-form" class="integration-form" method="post">
-          <div id="setup-code-field" hidden><label for="setup-code">Einrichtungscode</label>
-            <input id="setup-code" type="password" autocomplete="one-time-code" /></div>
           <div id="current-password-field" hidden><label for="current-password">Aktuelles Passwort</label>
             <input id="current-password" type="password" autocomplete="current-password" /></div>
           <label for="access-mode">Anmeldung</label>

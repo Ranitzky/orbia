@@ -7,7 +7,6 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"errors"
-	"log/slog"
 	"mime"
 	"net/http"
 	"strings"
@@ -35,14 +34,6 @@ func (a *auth) credential() (mode, credential string, err error) {
 		return nil
 	})
 	return
-}
-
-func (s *Server) LogSetupCode() error {
-	mode, _, err := s.auth.credential()
-	if err == nil && mode == "setup" {
-		slog.Info("Complete first-time setup in the Orbia web UI", "setup_code", s.auth.setupCode)
-	}
-	return err
 }
 
 func passwordKey(password, salt string) string {
@@ -82,7 +73,7 @@ func (a *auth) webAccess(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 415, "Expected JSON.")
 		return
 	}
-	var in struct{ Password, Current, Code, Mode string }
+	var in struct{ Password, Current, Mode string }
 	if decode(w, r, &in, 16<<10) != nil {
 		writeError(w, 400, "Invalid request.")
 		return
@@ -113,27 +104,20 @@ func (a *auth) webAccess(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 429, "Too many attempts.")
 		return
 	}
-	var verified bool
-	switch mode {
-	case "setup":
-		verified = a.setupCode != "" && subtle.ConstantTimeCompare([]byte(in.Code), []byte(a.setupCode)) == 1
-	case "open":
-		verified = true
-	case "password":
+	if mode == "password" {
 		password := in.Password
 		if change {
 			password = in.Current
 		}
-		verified = passwordMatches(password, credential)
-	}
-	if !verified {
-		a.failures++
-		status := http.StatusForbidden
-		if r.URL.Path == "/auth/login" {
-			status = http.StatusUnauthorized
+		if !passwordMatches(password, credential) {
+			a.failures++
+			status := http.StatusUnauthorized
+			if change {
+				status = http.StatusForbidden
+			}
+			writeError(w, status, "Incorrect credential.")
+			return
 		}
-		writeError(w, status, "Incorrect credential.")
-		return
 	}
 	if change || mode == "setup" {
 		var next string
@@ -163,7 +147,6 @@ func (a *auth) webAccess(w http.ResponseWriter, r *http.Request) {
 			respondError(w, err)
 			return
 		}
-		a.setupCode = ""
 		a.mu.Lock()
 		clear(a.sessions)
 		a.mu.Unlock()

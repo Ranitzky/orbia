@@ -33,7 +33,7 @@ func TestBrowserServer(t *testing.T) {
 	fresh := NewServer(freshStore, Config{})
 	onboarding := httptest.NewServer(fresh)
 	defer onboarding.Close()
-	fmt.Println("SETUP", onboarding.URL, fresh.auth.setupCode)
+	fmt.Println("SETUP", onboarding.URL)
 	fmt.Println(server.URL)
 	_, _ = io.Copy(io.Discard, os.Stdin)
 }

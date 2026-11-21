@@ -17,10 +17,9 @@ import (
 )
 
 type auth struct {
-	store     *Store
-	setupCode string
-	accessMu  sync.Mutex
-	key       []byte
+	store    *Store
+	accessMu sync.Mutex
+	key      []byte
 
 	secure   bool
 	origin   string
@@ -33,7 +32,7 @@ type auth struct {
 func newAuth(store *Store, secure bool, origin string) *auth {
 	key := make([]byte, 32)
 	rand.Read(key)
-	return &auth{store: store, setupCode: rand.Text(), key: key, secure: secure, origin: strings.TrimRight(origin, "/"), sessions: map[string]int64{}}
+	return &auth{store: store, key: key, secure: secure, origin: strings.TrimRight(origin, "/"), sessions: map[string]int64{}}
 }
 func (a *auth) signature(v string) string {
 	h := hmac.New(sha256.New, a.key)

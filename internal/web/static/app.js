@@ -64,7 +64,7 @@ async function setLanguage(value, persist = false) {
   const select = $("#language");
   select.disabled = true;
   try {
-    english = value === "en" ? (await import("./en.js?v=4")).default : null;
+    english = value === "en" ? (await import("./en.js?v=5")).default : null;
   } catch {
     select.value = document.documentElement.lang;
     toast("Die Sprachdatei konnte nicht geladen werden. / Could not load the language file.", true);
@@ -1016,8 +1016,6 @@ function prepareAccessForm(setup) {
   form.reset();
   $("#access-status").textContent = "";
   $(setup ? "#setup-container" : "#access-settings").append(form);
-  $("#setup-code-field").hidden = !setup;
-  $("#setup-code").required = setup;
   const current = !setup && state.accessMode === "password";
   $("#current-password-field").hidden = !current;
   $("#current-password").required = current;
@@ -1035,7 +1033,6 @@ $("#access-form").addEventListener("submit", async event => {
     mode,
     password: mode === "password" ? $("#new-password").value : "",
     current: $("#current-password").value,
-    code: $("#setup-code").value.trim(),
   };
   integrationStatus("#access-status", "");
   try {
@@ -1051,8 +1048,8 @@ $("#access-form").addEventListener("submit", async event => {
     if (error.status === 409 || error.status === 401) {
       await start();
     } else {
-      integrationStatus("#access-status", error.status === 403
-        ? t(setup ? "Der Einrichtungscode stimmt nicht." : "Das aktuelle Passwort stimmt nicht.")
+      integrationStatus("#access-status", !setup && error.status === 403
+        ? t("Das aktuelle Passwort stimmt nicht.")
         : error.message, true);
     }
   } finally {
@@ -1427,7 +1424,7 @@ async function start() {
       $("#app").hidden = true;
       $("#login").hidden = true;
       prepareAccessForm(true);
-      $("#setup-code").focus();
+      $("#access-mode").focus();
       return;
     }
     if (!access.authenticated) {

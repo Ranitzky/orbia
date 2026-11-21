@@ -16,7 +16,7 @@ docker compose up -d --build --wait
 docker compose ps
 ```
 
-Open `http://<unraid-host>:8080`. On first launch, copy the current `setup_code` from the Orbia container log (on Unraid, **Docker → Orbia → Logs**) into **Set up Orbia**. Choose a password of at least 12 characters or explicitly choose **Without a password**. Until setup finishes, restarting Orbia generates a fresh code. Existing installations upgrading from environment-based passwords also complete this step once.
+Open `http://<unraid-host>:8080`. In **Set up Orbia**, choose a password of at least 12 characters or select **Without a password**, then save. The first visitor to save this choice configures the instance. Complete setup on a trusted network before exposing Orbia publicly. Existing installations upgrading from environment-based passwords also complete this step once.
 
 In **Settings → Access**, enter your current password to change or remove it. You can enable password protection again there. Saving the access settings signs out other browser sessions. In passwordless mode, anyone who can reach Orbia can open a session and manage bookmarks, tokens and access settings. Use it only on a trusted network or behind an authenticated proxy.
 
@@ -74,7 +74,7 @@ For a full backup with stable IDs, stop the container, copy its **entire** data 
 
 ## Develop and test
 
-A native build requires Go 1.26+, a C compiler, SQLite headers and a library with FTS5. On Debian/Ubuntu install `build-essential libsqlite3-dev`. Run `go run ./cmd/orbia` and use the setup code printed to the server log. The native process reads its environment. Compose reads `.env`.
+A native build requires Go 1.26+, a C compiler, SQLite headers and a library with FTS5. On Debian/Ubuntu install `build-essential libsqlite3-dev`. Run `go run ./cmd/orbia` and complete setup in the browser. The native process reads its environment. Compose reads `.env`.
 
 ```sh
 go test -race ./...

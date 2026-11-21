@@ -59,9 +59,6 @@ func run() error {
 		}
 	}
 	handler := app.NewServer(store, app.Config{Origin: origin, SecureCookie: os.Getenv("ORBIA_SECURE_COOKIE") == "true"})
-	if err := handler.LogSetupCode(); err != nil {
-		return err
-	}
 	server := &http.Server{Addr: env("ORBIA_ADDR", ":8080"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 60 * time.Second, WriteTimeout: 120 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 32 << 10}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

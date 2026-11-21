@@ -13,7 +13,7 @@ const { chromium, webkit } = await import(
     ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href
     : "playwright"
 );
-let browser, server, origin, temporary, context, setupOrigin, setupCode;
+let browser, server, origin, temporary, context, setupOrigin;
 const errors = [];
 
 before(
@@ -34,7 +34,7 @@ before(
     const output = createInterface({ input: server.stdout });
     origin = await new Promise((resolve, reject) => {
       output.on("line", (line) => {
-        if (line.startsWith("SETUP ")) [, setupOrigin, setupCode] = line.split(" ");
+        if (line.startsWith("SETUP ")) setupOrigin = line.slice("SETUP ".length);
         if (line.startsWith("http://")) resolve(line);
       });
       server.once("error", reject);
@@ -635,7 +635,6 @@ test("first-run setup, passwordless access and password changes in Settings", as
   try {
     const page = await owner.newPage();
     await page.goto(setupOrigin);
-    await page.getByLabel("Setup code").fill(setupCode);
     const mode = page.getByLabel("Sign-in method");
     const save = page.getByRole("button", {name: "Save access settings"});
     await mode.selectOption("open");

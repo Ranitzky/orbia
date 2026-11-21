@@ -31,7 +31,7 @@ func fixture(t *testing.T) (*Store, *Server) {
 		t.Fatal(e)
 	}
 	server := NewServer(s, Config{})
-	w := request(server, "POST", "/auth/setup", fmt.Sprintf(`{"code":%q,"mode":"password","password":%q}`, server.auth.setupCode, testPassword), false)
+	w := request(server, "POST", "/auth/setup", fmt.Sprintf(`{"mode":"password","password":%q}`, testPassword), false)
 	expectStatus(t, w, 200)
 	return s, server
 }
