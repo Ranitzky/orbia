@@ -161,6 +161,33 @@ test("dashboard and bookmark cards retain their responsive layout", async () => 
   }
 });
 
+test("quick status reserves space between the grid and the input", async () => {
+  const page = await pageFor();
+  const grid = page.locator("#groups");
+  const status = page.locator("#quick-status");
+  const positions = () => page.locator("#groups, .dashboard-bottom, #quick-input").evaluateAll(
+    elements => elements.map(el => el.getBoundingClientRect().top + window.scrollY),
+  );
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({width, height: 844});
+    await page.locator("#quick-input").focus();
+    const before = await positions();
+    await page.keyboard.type("i");
+    assert.deepEqual(await positions(), before);
+    const gridBox = await grid.boundingBox();
+    const statusBox = await status.boundingBox();
+    const bottomBox = await page.locator(".dashboard-bottom").boundingBox();
+    assert.ok(gridBox.y + gridBox.height <= statusBox.y);
+    assert.ok(statusBox.y + statusBox.height <= bottomBox.y);
+    await page.keyboard.type("zz");
+    assert.match(await status.textContent(), /Kein passendes Kürzel/);
+    assert.deepEqual(await positions(), before);
+    await page.keyboard.press("Escape");
+    assert.equal(await status.isVisible(), false);
+    assert.deepEqual(await positions(), before);
+  }
+});
+
 test("dashboard reference, prefix-only search, target preview and Enter navigation", async () => {
   const page = await pageFor();
   assert.equal(await page.locator(".group-card").count(), 6);

@@ -268,8 +268,10 @@ function renderQuick() {
   });
   $("#quick-input").value = state.quick;
   const el = $("#quick-status");
-  el.hidden = !state.quick;
-  if (!state.quick) return;
+  if (!state.quick) {
+    el.replaceChildren();
+    return;
+  }
   const chosen = matches.length === 1 ? matches[0] : null;
   el.innerHTML = `<span class="query-display">${escapeHTML(state.quick)}</span><div class="quick-preview">${chosen ? `${escapeHTML(chosen.name)}<span>${escapeHTML(chosen.url)}</span>` : `${matches.length ? `${matches.length} passende Quicklinks` : "Kein passendes Kürzel"}<span>${matches.length ? "Weiter tippen, um die Auswahl einzugrenzen." : "Mit Backspace korrigieren oder mit Esc zurücksetzen."}</span>`}</div>${chosen ? "<kbd>↵ öffnen</kbd>" : "<kbd>esc</kbd>"}`;
 }
