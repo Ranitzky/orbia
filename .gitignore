@@ -1,0 +1,9 @@
+.env
+data/
+/orbia
+node_modules/
+test-results/
+playwright-report/
+*.db*
+coverage.out
+.cache/

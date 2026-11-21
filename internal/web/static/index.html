@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#090f12" />
+    <meta
+      name="description"
+      content="Orbia. Dein Dashboard und deine Bookmarks an einem Ort."
+    />
+    <title>Orbia</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="/fonts/JetBrainsMono-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Zum Inhalt</a>
+    <svg class="svg-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <symbol id="i-search" viewBox="0 0 24 24">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m16 16 5 5" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-grid" viewBox="0 0 24 24">
+          <rect x="4" y="4" width="6" height="6" rx="1" />
+          <rect x="14" y="4" width="6" height="6" rx="1" />
+          <rect x="4" y="14" width="6" height="6" rx="1" />
+          <rect x="14" y="14" width="6" height="6" rx="1" />
+        </symbol>
+        <symbol id="i-list" viewBox="0 0 24 24">
+          <path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1" />
+        </symbol>
+        <symbol id="i-bookmark" viewBox="0 0 24 24">
+          <path d="M6 4h12v17l-6-4-6 4z" />
+        </symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24">
+          <path d="M4 7h16M4 17h16" />
+          <circle cx="9" cy="7" r="3" />
+          <circle cx="15" cy="17" r="3" />
+        </symbol>
+        <symbol id="i-edit" viewBox="0 0 24 24">
+          <path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z" />
+        </symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24">
+          <path d="M4 12h16m-6-6 6 6-6 6" />
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24">
+          <path d="m6 6 12 12M6 18 18 6" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path d="m5 12 4 4L19 6" />
+        </symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"
+          />
+        </symbol>
+        <symbol id="i-archive" viewBox="0 0 24 24">
+          <path d="M5 9v12h14V9M3 3h18v6H3zM9 13h6" />
+        </symbol>
+        <symbol id="i-command" viewBox="0 0 24 24">
+          <path
+            d="M8 8h8v8H8zM8 8H5a3 3 0 1 1 3-3v3Zm8 0V5a3 3 0 1 1 3 3h-3Zm0 8h3a3 3 0 1 1-3 3v-3Zm-8 0v3a3 3 0 1 1-3-3h3Z"
+          />
+        </symbol>
+      </defs>
+    </svg>
+
+    <section id="login" class="login-screen" hidden>
+      <form id="login-form" class="login-card">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">[ ]</span
+          ><span>Orbia</span>
+        </div>
+        <p class="login-intro">Melde dich bei deinem Dashboard an.</p>
+        <label for="password">Passwort</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          autocomplete="current-password"
+          placeholder="Dein Orbia-Passwort"
+        />
+        <p id="login-error" class="form-error" role="alert"></p>
+        <button class="button primary" type="submit">Orbia öffnen</button>
+      </form>
+    </section>
+
+    <div id="app" class="shell" hidden>
+      <header class="header">
+        <button
+          id="nav-dashboard"
+          class="brand brand-button"
+          data-action="dashboard"
+          aria-label="Orbia Dashboard"
+        >
+          <span class="brand-mark" aria-hidden="true">[ ]</span
+          ><span>Orbia</span>
+        </button>
+      <nav class="main-nav" aria-label="Hauptnavigation">
+        <button class="nav-item active" id="nav-dashboard" data-action="dashboard"><svg><use href="#i-grid"/></svg><span>Dashboard</span></button>
+        <button class="nav-item" id="nav-bookmarks" data-action="bookmarks"><svg><use href="#i-bookmark"/></svg><span>Bookmarks</span></button>
+      </nav>
+      <div class="header-actions">
+        <button class="nav-item" data-action="search" aria-label="Bookmarks suchen (Cmd+P)"><svg><use href="#i-search"/></svg><span>Suche</span><kbd>⌘ P</kbd></button>
+        <button class="icon-button" data-action="settings" aria-label="Einstellungen"><svg><use href="#i-settings"/></svg></button>
+        <button class="icon-button command-button" data-action="command" aria-label="Befehle (Cmd+K)"><svg><use href="#i-command"/></svg></button>
+      </div>
+      </header>
+
+      <main id="main" tabindex="-1">
+        <section id="dashboard-view" aria-label="Quickdashboard">
+          <div class="dashboard-toolbar" id="dashboard-toolbar" hidden>
+            <div
+              class="page-tabs"
+              id="page-tabs"
+              role="tablist"
+              aria-label="Dashboard-Seiten"
+            ></div>
+          </div>
+          <div class="edit-bar" id="edit-bar" hidden>
+            <span>Bearbeitungsmodus</span>
+            <div>
+              <button class="text-button" data-action="new-group">
+                Gruppe hinzufügen</button
+              ><button class="button small-button" data-action="new-link">
+                <svg><use href="#i-plus" /></svg>Quicklink</button
+              ><button class="text-button" data-action="edit-page">
+                Seite bearbeiten
+              </button>
+            </div>
+          </div>
+          <div
+            id="quick-status"
+            class="quick-status"
+            role="status"
+            hidden
+          ></div>
+          <div id="groups" class="groups-grid"></div>
+          <div class="dashboard-bottom">
+            <div class="typing-hint">
+              <span class="prompt-symbol">/</span
+              ><input
+                id="quick-input"
+                class="quick-input"
+                aria-label="Quicklinks nach Kürzel suchen"
+                placeholder="Kürzel eingeben"
+                maxlength="3"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+              /><kbd>↵</kbd>
+            </div>
+            <div class="dashboard-tools">
+              <button
+                class="edit-toggle text-button"
+                id="edit-toggle"
+                data-action="edit"
+                aria-pressed="false"
+                aria-label="Dashboard bearbeiten"
+              >
+                <kbd>⌘ E</kbd><span>Bearbeiten</span>
+              </button>
+              <button class="text-button" data-action="command">
+                <kbd>⌘ K</kbd>Befehle
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="bookmark-view" aria-label="Bookmarks" hidden>
+          <div class="bookmark-heading">
+            <div><h1>Bookmarks<span class="accent">.</span></h1></div>
+            <button
+              class="button primary"
+              data-action="new-bookmark"
+              aria-label="Bookmark hinzufügen"
+            >
+              <svg><use href="#i-plus" /></svg><span>Bookmark hinzufügen</span>
+            </button>
+          </div>
+          <div class="bookmark-toolbar">
+            <div class="search-field">
+              <svg><use href="#i-search" /></svg
+              ><input
+                id="bookmark-query"
+                aria-label="Bookmarks filtern"
+                type="search"
+                placeholder="Suchen oder #tags kombinieren …"
+                autocomplete="off"
+                spellcheck="false"
+              /><kbd>/</kbd>
+            </div>
+            <button
+              class="button"
+              id="archive-toggle"
+              data-action="archive-view"
+              aria-pressed="false"
+            >
+              <svg><use href="#i-archive" /></svg><span>Archiv</span>
+            </button>
+            <div class="view-switch" role="group" aria-label="Bookmark-Ansicht">
+              <button
+                class="icon-button"
+                data-action="grid"
+                id="grid-view"
+                aria-label="Kachelansicht"
+                aria-pressed="true"
+              >
+                <svg><use href="#i-grid" /></svg></button
+              ><button
+                class="icon-button"
+                data-action="list"
+                id="list-view"
+                aria-label="Listenansicht"
+                aria-pressed="false"
+              >
+                <svg><use href="#i-list" /></svg>
+              </button>
+            </div>
+          </div>
+          <div class="bookmark-layout">
+            <aside class="tag-sidebar" aria-label="Tag-Navigation">
+              <div class="sidebar-heading">
+                <span>TAGS</span
+                ><button class="text-button" data-action="clear-filters">
+                  Zurücksetzen
+                </button>
+              </div>
+              <div id="bookmark-tags"></div>
+            </aside>
+            <div class="bookmark-content">
+              <div class="results-heading">
+                <span id="bookmark-count" role="status"></span
+                ><span class="small muted"
+                  >Titel · URL · Beschreibung · Notizen</span
+                >
+              </div>
+              <div id="bookmarks" class="bookmark-grid"></div>
+              <button
+                id="load-more"
+                class="button load-more"
+                data-action="load-more"
+                hidden
+              >
+                Weitere laden
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="mobile-nav" aria-label="Schnellaktionen">
+        <button data-action="dashboard">
+          <svg><use href="#i-grid" /></svg><span>Dashboard</span></button
+        ><button data-action="bookmarks">
+          <svg><use href="#i-bookmark" /></svg><span>Bookmarks</span></button
+        ><button data-action="search">
+          <svg><use href="#i-search" /></svg><span>Suche</span></button
+        ><button data-action="mobile-add">
+          <svg><use href="#i-plus" /></svg><span>Hinzufügen</span>
+        </button>
+      </nav>
+    </div>
+
+    <dialog
+      id="search-dialog"
+      class="search-dialog"
+      aria-labelledby="search-title"
+    >
+      <div class="search-dialog-heading">
+        <h2 id="search-title">Bookmarks durchsuchen</h2>
+        <button
+          class="icon-button"
+          data-close="search-dialog"
+          aria-label="Suche schließen"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="search-field large-search">
+        <svg><use href="#i-search" /></svg
+        ><input
+          id="panel-query"
+          aria-describedby="panel-count"
+          type="search"
+          aria-label="Bookmarks durchsuchen"
+          placeholder="Suchbegriff oder #games #arpg #diablo"
+          autocomplete="off"
+          spellcheck="false"
+        /><kbd>esc</kbd>
+      </div>
+      <div id="panel-tags" class="panel-tags" aria-label="Passende Tags"></div>
+      <div id="panel-count" class="sr-only" role="status"></div>
+      <div id="panel-results" class="panel-results"></div>
+      <div class="panel-footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> wählen <kbd>↵</kbd> öffnen</span
+        ><button class="text-button" data-action="all-results">
+          Alle Ergebnisse ansehen
+        </button>
+      </div>
+    </dialog>
+
+    <dialog
+      id="command-dialog"
+      class="command-dialog"
+      aria-labelledby="command-title"
+    >
+      <div class="search-field large-search">
+        <svg><use href="#i-command" /></svg
+        ><label for="command-query" class="sr-only" id="command-title"
+          >Befehle</label
+        ><input
+          id="command-query"
+          placeholder="Was möchtest du tun?"
+          autocomplete="off"
+        /><button
+          class="icon-button"
+          data-close="command-dialog"
+          aria-label="Befehle schließen"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div id="commands" class="commands"></div>
+      <div id="command-status" class="sr-only" role="status"></div>
+      <div class="panel-footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> wählen <kbd>↵</kbd> ausführen</span
+        ><span class="muted small">Orbia</span>
+      </div>
+    </dialog>
+
+    <dialog
+      id="editor-dialog"
+      class="editor-dialog"
+      aria-labelledby="editor-title"
+    >
+      <form id="editor-form">
+        <div class="dialog-heading">
+          <h2 id="editor-title"></h2>
+          <button
+            type="button"
+            class="icon-button"
+            data-close="editor-dialog"
+            aria-label="Dialog schließen"
+          >
+            <svg><use href="#i-close" /></svg>
+          </button>
+        </div>
+        <div id="editor-fields" class="editor-fields"></div>
+        <p id="editor-error" class="form-error" role="alert"></p>
+        <div id="delete-confirm" class="delete-confirm" hidden>
+          Wirklich löschen? Diese Änderung kann nicht rückgängig gemacht
+          werden.<button
+            type="button"
+            class="button danger"
+            id="confirm-delete"
+          >
+            Endgültig löschen
+          </button>
+        </div>
+        <div class="dialog-actions">
+          <button
+            type="button"
+            class="text-button danger-text"
+            id="delete-button"
+            hidden
+          >
+            Löschen
+          </button>
+          <div>
+            <button type="button" class="button" data-close="editor-dialog">
+              Abbrechen</button
+            ><button type="submit" class="button primary" id="save-button">
+              Speichern
+            </button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog
+      id="settings-dialog"
+      class="settings-dialog"
+      aria-labelledby="settings-title"
+    >
+      <div class="dialog-heading">
+        <h2 id="settings-title">Einstellungen</h2>
+        <button
+          class="icon-button"
+          data-close="settings-dialog"
+          aria-label="Einstellungen schließen"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <section class="settings-section">
+        <h3>Darstellung</h3>
+        <button class="button" data-action="theme">
+          <svg><use href="#i-sun" /></svg
+          ><span id="theme-label">Zum hellen Modus wechseln</span>
+        </button>
+      </section>
+      <section class="settings-section">
+        <h3>Linkding-Integrationen</h3>
+        <p>
+          Diese Server-Adresse in Raycast oder der Linkding-Erweiterung
+          eintragen. Verwende den API-Token aus deiner Server-Konfiguration.
+        </p>
+        <div class="copy-field">
+          <code id="server-url"></code
+          ><button class="text-button" data-action="copy-url">Kopieren</button>
+        </div>
+        <p class="small muted">
+          Bookmarks lassen sich mit dem Serverbefehl „orbia pull“ aus einer Linkding-Instanz übernehmen.
+        </p>
+      </section>
+      <section class="settings-section">
+        <h3>Import & Export</h3>
+        <p>
+          HTML für Linkding und Browser. JSON sichert zusätzlich deine
+          Dashboard-Seiten. Beim Import werden URLs zusammengeführt. Ein
+          JSON-Backup ersetzt auch die Dashboard-Seiten.
+        </p>
+        <div class="transfer-actions">
+          <a class="button" href="/api/orbia/export?format=html" download
+            >HTML exportieren</a
+          ><a class="button" href="/api/orbia/export" download>JSON sichern</a
+          ><label class="button file-button" for="import-file"
+            >Datei importieren<input
+              id="import-file"
+              type="file"
+              accept=".html,.htm,.json"
+          /></label>
+        </div>
+        <p id="import-status" class="small" role="status"></p>
+      </section>
+      <section class="settings-section">
+        <h3>Tastatur</h3>
+        <div class="shortcut-list">
+          <span>Kürzel suchen</span><kbd>A–Z</kbd
+          ><span>Dashboard-Seite wechseln</span><kbd>1–9</kbd
+          ><span>Bearbeiten</span><kbd>⌘ / Ctrl E</kbd
+          ><span>Quicklink hinzufügen</span><kbd>⌘ / Ctrl +</kbd
+          ><span>Bookmarks suchen</span><kbd>⌘ / Ctrl P</kbd
+          ><span>Befehle öffnen</span><kbd>⌘ / Ctrl K</kbd
+          ><span>Schließen / Suche leeren</span><kbd>Esc</kbd>
+        </div>
+      </section>
+      <button class="text-button danger-text logout" data-action="logout">
+        Abmelden
+      </button>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

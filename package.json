@@ -1,0 +1,12 @@
+{
+  "name": "orbia-browser-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "go test ./...",
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e.test.mjs",
+    "check": "node --check internal/web/static/app.js",
+    "dev": "go run ./cmd/orbia"
+  },
+  "devDependencies": { "playwright": "1.62.1" }
+}
