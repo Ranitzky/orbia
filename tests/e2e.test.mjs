@@ -310,7 +310,7 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
     /bereits vergeben/,
   );
   await page.keyboard.press("Escape");
-  await command(page, "Neue Quicklink-Liste");
+  await command(page, "Neue Dashboard-Seite");
   await page.getByLabel("Name", { exact: true }).fill("Arbeit");
   await page.getByRole("button", { name: "Speichern", exact: true }).click();
   await page.locator("#editor-dialog").waitFor({ state: "hidden" });
@@ -610,8 +610,8 @@ test("language changes in settings, persists and keeps bookmark search data inta
   await wait(page, () => document.querySelector("#panel-count").textContent === "1 result");
   await page.keyboard.press("Escape");
   await page.keyboard.press("Meta+k");
-  await page.locator("#command-query").fill("create quicklink list");
-  await page.getByRole("button", {name:"Create quicklink list"}).waitFor();
+  await page.locator("#command-query").fill("new dashboard page");
+  await page.getByRole("button", {name:"New dashboard page", exact:true}).waitFor();
   await page.keyboard.press("Escape");
   await page.reload();
   await page.getByRole("button", {name:"Settings", exact:true}).click();
@@ -628,14 +628,16 @@ test("language changes in settings, persists and keeps bookmark search data inta
 
 test("adding a seventh group shows an error toast", async () => {
   const page = await pageFor({}, "en");
-  await command(page, "Create quicklink list");
+  await page.keyboard.press("Meta+e");
+  const editBar = page.locator("#edit-bar");
+  await editBar.getByRole("button", { name: "Add page", exact: true }).click();
+  const newPage = page.getByRole("dialog", { name: "New dashboard page", exact: true });
+  await newPage.getByLabel("Name", { exact: true }).fill("Group limit");
+  await newPage.getByRole("button", { name: "Save", exact: true }).click();
   const editor = page.locator("#editor-dialog");
-  await editor.getByLabel("Name", { exact: true }).fill("Group limit");
-  await editor.getByRole("button", { name: "Save", exact: true }).click();
   await editor.waitFor({ state: "hidden" });
 
-  await page.keyboard.press("Meta+e");
-  const add = page.getByRole("button", { name: "Add group", exact: true });
+  const add = editBar.getByRole("button", { name: "Add group", exact: true });
   for (let number = 1; number <= 6; number++) {
     await add.click();
     await editor.getByLabel("Name", { exact: true }).fill(`Group ${number}`);

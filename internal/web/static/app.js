@@ -64,7 +64,7 @@ async function setLanguage(value, persist = false) {
   const select = $("#language");
   select.disabled = true;
   try {
-    english = value === "en" ? (await import("./en.js?v=8")).default : null;
+    english = value === "en" ? (await import("./en.js?v=11")).default : null;
   } catch {
     select.value = document.documentElement.lang;
     toast("Die Sprachdatei konnte nicht geladen werden. / Could not load the language file.", true);
@@ -719,7 +719,7 @@ function availableCommands() {
       run: toggleEdit,
     },
     ...state.dashboard.pages.map((p, i) => ({
-      label: t("Liste wechseln · {name}", {name: p.name}),
+      label: t("Seite wechseln · {name}", {name: p.name}),
       icon: "grid",
       key: String(i + 1),
       run: () => {
@@ -728,12 +728,12 @@ function availableCommands() {
       },
     })),
     {
-      label: t("Neue Quicklink-Liste anlegen"),
+      label: t("Neue Dashboard-Seite"),
       icon: "plus",
       run: () => editPage(true),
     },
     {
-      label: t("Aktuelle Quicklink-Liste bearbeiten"),
+      label: t("Aktuelle Dashboard-Seite bearbeiten"),
       icon: "edit",
       run: () => editPage(false),
     },
@@ -1238,6 +1238,7 @@ const actions = {
   theme: toggleTheme,
   "new-link": () => editLink(),
   "new-group": () => editGroup(),
+  "new-page": () => editPage(true),
   "edit-page": () => editPage(false),
   "new-bookmark": () => editBookmark(),
   "mobile-add": () =>
