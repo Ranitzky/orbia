@@ -285,15 +285,23 @@ function toggleEdit() {
 let bookmarkController,
   bookmarkTimer,
   bookmarkSequence = 0;
+// Only the last unfinished hashtag is a prefix. Earlier tags are exact filters.
+function searchParams(query) {
+  const fragment = /(?:^|\s)#([^\s#"]*)$/u.exec(query);
+  const params = new URLSearchParams({q: fragment ? query.slice(0, fragment.index) : query});
+  if (fragment) params.set("tag_prefix", fragment[1]);
+  return params;
+}
 const selectedTags = (query) =>
-  new Set((query.match(/#[^\s]+/g) || []).map((t) => t.slice(1).toLowerCase()));
+  new Set((searchParams(query).get("q").match(/#[^\s]+/g) || []).map(t => t.slice(1).toLowerCase()));
 function toggleTag(query, name) {
-  const terms = query.trim().split(/\s+/).filter(Boolean),
-    value = `#${name}`;
-  const found = terms.findIndex((t) => t.toLowerCase() === value.toLowerCase());
+  const params = searchParams(query);
+  const terms = params.get("q").match(/"[^"]*"|\S+/g) || [];
+  const value = `#${name}`;
+  const found = terms.findIndex(t => t.toLowerCase() === value.toLowerCase());
   if (found >= 0) terms.splice(found, 1);
   else terms.push(value);
-  return terms.join(" ");
+  return terms.length ? terms.join(" ") + " " : "";
 }
 function tagMarkup(tags, query, panel = false) {
   const selected = selectedTags(query);
@@ -363,19 +371,18 @@ async function loadBookmarks(append = false) {
   const offset = append ? state.books.length : 0;
   $("#bookmark-count").textContent = "Suche …";
   $("#load-more").disabled = true;
-  const params = new URLSearchParams({
-      q: state.query,
-      limit: "36",
-      offset: String(offset),
-    }),
-    endpoint = state.archived ? "archived/" : "";
+  const filters = searchParams(state.query);
+  const params = new URLSearchParams(filters);
+  params.set("limit", "36");
+  params.set("offset", String(offset));
+  const endpoint = state.archived ? "archived/" : "";
   try {
     const [data, facets] = await Promise.all([
       api(`/api/bookmarks/${endpoint}?${params}`, {
         signal: bookmarkController.signal,
       }),
       api(
-        `/api/orbia/facets?q=${encodeURIComponent(state.query)}&archived=${state.archived}`,
+        `/api/orbia/facets?${filters}&archived=${state.archived}`,
         { signal: bookmarkController.signal },
       ),
     ]);
@@ -433,14 +440,15 @@ async function loadPanel() {
   panelController = new AbortController();
   const sequence = ++panelSequence,
     query = $("#panel-query").value;
+  const filters = searchParams(query);
   clearPanelResults();
   $("#panel-count").textContent = "Suche …";
   try {
     const [data, facets] = await Promise.all([
-      api(`/api/bookmarks/?q=${encodeURIComponent(query)}&limit=30`, {
+      api(`/api/bookmarks/?${filters}&limit=30`, {
         signal: panelController.signal,
       }),
-      api(`/api/orbia/facets?q=${encodeURIComponent(query)}`, {
+      api(`/api/orbia/facets?${filters}`, {
         signal: panelController.signal,
       }),
     ]);

@@ -231,7 +231,10 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(405)
 			return
 		}
-		tags, e := s.store.Tags(r.URL.Query().Get("q"), r.URL.Query().Get("archived") == "true", true)
+		tags, e := s.store.Tags(Search{
+			Query: r.URL.Query().Get("q"), TagPrefix: r.URL.Query().Get("tag_prefix"),
+			Archived: r.URL.Query().Get("archived") == "true",
+		}, true)
 		if e != nil {
 			respondError(w, e)
 			return
@@ -291,7 +294,7 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request) {
 	case "api/bookmarks", "api/bookmarks/archived":
 		if method == "GET" {
 			limit, offset := pageParams(r)
-			p := Search{Query: r.URL.Query().Get("q"), Archived: strings.HasSuffix(path, "archived"), Limit: limit, Offset: offset, ModifiedSince: r.URL.Query().Get("modified_since"), AddedSince: r.URL.Query().Get("added_since")}
+			p := Search{Query: r.URL.Query().Get("q"), TagPrefix: r.URL.Query().Get("tag_prefix"), Archived: strings.HasSuffix(path, "archived"), Limit: limit, Offset: offset, ModifiedSince: r.URL.Query().Get("modified_since"), AddedSince: r.URL.Query().Get("added_since")}
 			if r.URL.Query().Get("bundle") != "" {
 				writeError(w, 501, "Bundles are not implemented.")
 				return
@@ -322,7 +325,7 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request) {
 		return
 	case "api/tags":
 		if method == "GET" {
-			tags, e := s.store.Tags("", false, false)
+			tags, e := s.store.Tags(Search{}, false)
 			if e != nil {
 				respondError(w, e)
 				return
@@ -416,7 +419,7 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if method == "DELETE" {
-			tags, e := s.store.Tags("", false, false)
+			tags, e := s.store.Tags(Search{}, false)
 			if e != nil {
 				respondError(w, e)
 				return
@@ -439,7 +442,7 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if method == "GET" {
-			tags, e := s.store.Tags("", false, false)
+			tags, e := s.store.Tags(Search{}, false)
 			if e != nil {
 				respondError(w, e)
 				return

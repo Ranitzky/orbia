@@ -286,6 +286,27 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
   assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
 });
 
+test("tag prefixes suggest names and bookmarks, then complete the active filter", async () => {
+  const page = await pageFor();
+  await page.keyboard.press("Meta+p");
+  const query = page.locator("#panel-query");
+  await query.fill("#D");
+  await wait(page, () => document.querySelector("#panel-count").textContent === "4 Ergebnisse");
+  assert.deepEqual(await page.locator("#panel-tags button").allTextContents(), ["#design", "#dev", "#diablo", "#docs"]);
+  assert.equal(await page.locator(".panel-result").count(), 4);
+  await page.locator('[data-panel-tag="dev"]').click();
+  assert.equal(await query.inputValue(), "#dev ");
+  await wait(page, () => document.querySelector("#panel-count").textContent === "2 Ergebnisse");
+  await query.fill("#games Loot #d");
+  await wait(page, () => document.querySelector("#panel-count").textContent === "1 Ergebnis");
+  assert.deepEqual(await page.locator("#panel-tags button").allTextContents(), ["#diablo"]);
+  await page.locator('[data-action="all-results"]').click();
+  const suggestion = page.locator('#bookmark-tags [data-bookmark-tag="diablo"]');
+  await suggestion.click();
+  assert.equal(await page.locator("#bookmark-query").inputValue(), "#games Loot #diablo ");
+  await wait(page, () => document.querySelector("#bookmark-count").textContent === "1 Bookmark");
+});
+
 test("bookmark AND filters, matching tag suggestions, text search, list layout and search panel", async () => {
   const page = await pageFor();
   await page.locator("#nav-bookmarks").click();

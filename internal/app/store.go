@@ -300,7 +300,7 @@ func (s *Store) Delete(id int64) error {
 }
 
 type Search struct {
-	Query                     string
+	Query, TagPrefix          string
 	Archived                  bool
 	Limit, Offset             int
 	ModifiedSince, AddedSince string
@@ -309,8 +309,15 @@ type Search struct {
 // Search deliberately supports conjunctions and quoted phrases, not Linkding's full boolean grammar.
 var termsPattern = regexp.MustCompile(`"[^"]*"|\S+`)
 
+// GLOB can use the binary index on tag names. Escape user-supplied metacharacters.
+var literalGlob = strings.NewReplacer("[", "[[]", "*", "[*]", "?", "[?]")
+
+func tagPrefixPattern(prefix string) string {
+	return literalGlob.Replace(strings.ToLower(prefix)) + "*"
+}
+
 func searchWhere(p Search) (string, []any, error) {
-	if len(p.Query) > 512 {
+	if len(p.Query)+len(p.TagPrefix) > 512 {
 		return "", nil, ValidationError{"q", "Maximum query length is 512 bytes."}
 	}
 	where := "b.is_archived=?"
@@ -358,6 +365,10 @@ func (s *Store) List(p Search) (books []Bookmark, count int64, err error) {
 	if err != nil {
 		return nil, 0, err
 	}
+	if p.TagPrefix != "" {
+		where += " AND b.id IN (SELECT bt.bookmark_id FROM tags t JOIN bookmark_tags bt ON bt.tag_id=t.id WHERE t.name GLOB ?)"
+		args = append(args, tagPrefixPattern(p.TagPrefix))
+	}
 	books = []Bookmark{}
 	err = s.DB.Read(func(c *sqlite.Conn) error {
 		totals, e := c.Query("SELECT count(*) AS n FROM bookmarks b WHERE "+where, args...)
@@ -395,9 +406,9 @@ func (s *Store) List(p Search) (books []Bookmark, count int64, err error) {
 	})
 	return
 }
-func (s *Store) Tags(query string, archived bool, facets bool) (tags []Tag, err error) {
+func (s *Store) Tags(p Search, facets bool) (tags []Tag, err error) {
 	tags = []Tag{}
-	where, args, e := searchWhere(Search{Query: query, Archived: archived})
+	where, args, e := searchWhere(p)
 	if e != nil {
 		return nil, e
 	}
@@ -405,6 +416,10 @@ func (s *Store) Tags(query string, archived bool, facets bool) (tags []Tag, err 
 		q := "SELECT t.*,count(bt.bookmark_id) AS n FROM tags t LEFT JOIN bookmark_tags bt ON bt.tag_id=t.id"
 		if facets {
 			q += " WHERE bt.bookmark_id IN (SELECT b.id FROM bookmarks b WHERE " + where + ")"
+			if p.TagPrefix != "" {
+				q += " AND t.name GLOB ?"
+				args = append(args, tagPrefixPattern(p.TagPrefix))
+			}
 		} else {
 			args = nil
 		}

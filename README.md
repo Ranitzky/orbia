@@ -41,7 +41,7 @@ Serve Orbia at the root of its own domain. Preserve the Host header and pass `/a
 | Add a quicklink | Cmd/Ctrl+Plus. The header and mobile bar also offer an add button for the current mode. |
 | Create or switch lists | Cmd/Ctrl+K opens the command palette. Choose a dashboard page, create one or change the theme. Arrow keys select a command and Enter runs it. |
 | Browse bookmarks | Choose **Tags** on desktop or **Bookmarks** on mobile. Switch between cards and rows, edit notes and tags, and open the archive. |
-| Search from either mode | Cmd/Ctrl+P or **Suche** opens a panel in the lower third on desktop. Type `#games #arpg #diablo Loot`. Every tag and text term must match. Suggested tags come from matching bookmarks. Use the arrows and Enter, or tap a result. |
+| Search from either mode | Cmd/Ctrl+P or **Suche** opens a panel in the lower third on desktop. Type `#games #arpg #diablo Loot`. Every tag and text term must match. While typing a final hashtag such as `#d`, the panel and library suggest matching tag names and show bookmarks with any of those tags. Click a suggestion or type a space after the full tag to apply it as an exact filter. Earlier tags and text constrain both results and suggestions. Use the arrows and Enter, or tap a result. |
 
 The desktop header also accepts the displayed punctuation shortcuts outside text fields. The app reserves unmodified letters for quicklink codes. Theme, dashboard page and bookmark layout persist per browser. Dates are present in API records for interchange. The interface shows no clock or date.
 

@@ -342,7 +342,7 @@ func TestTenThousandBookmarks(t *testing.T) {
 		if e != nil || n != 100 || len(books) != 36 {
 			t.Fatalf("scale query: %d / %d %v", len(books), n, e)
 		}
-		tags, e := store.Tags("#games #arpg #diablo", false, true)
+		tags, e := store.Tags(Search{Query: "#games #arpg #diablo"}, true)
 		if e != nil || len(tags) != 3 {
 			t.Fatalf("facets: %d %v", len(tags), e)
 		}
