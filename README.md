@@ -31,6 +31,12 @@ For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PG
 
 Serve Orbia at the root of its own domain. Preserve the Host header and pass `/api/` token requests through the proxy. Browser sessions expire after 24 hours or on server restart. The web password and API token can be rotated by changing the environment and recreating the container.
 
+## Interface language
+
+Orbia opens in English by default. Choose **Settings → Language → Deutsch** to switch to German. Orbia remembers your choice in this browser and applies it to the sign-in screen, dashboard, library, editors and commands. Saved names, tags, notes and quicklink codes keep their original spelling.
+
+The English catalog loads from the Orbia server on demand and the browser can cache it. Switching languages updates the current view in place. Search uses the same API, SQLite indexes and debounce settings in both languages.
+
 ## Keyboard and touch
 
 | Action | How |

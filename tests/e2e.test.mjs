@@ -59,19 +59,23 @@ after(async () => {
   if (temporary) await rm(temporary, { recursive: true, force: true });
 });
 
-async function pageFor(options = {}) {
+async function pageFor(options = {}, language = "de") {
   await context?.close();
   context = await browser.newContext({
     viewport: { width: 1440, height: 1000 },
+    storageState: {
+      cookies: [],
+      origins: language ? [{ origin, localStorage: [{ name: "orbia.language", value: language }] }] : [],
+    },
     ...options,
   });
   const page = await context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(origin);
   await page
-    .getByLabel("Passwort", { exact: true })
+    .getByLabel(language === "de" ? "Passwort" : "Password", { exact: true })
     .fill("a-long-test-password");
-  await page.getByRole("button", { name: "Orbia öffnen", exact: true }).click();
+  await page.getByRole("button", { name: language === "de" ? "Orbia öffnen" : "Open Orbia", exact: true }).click();
   await page.locator("#app").waitFor({ state: "visible" });
   return page;
 }
@@ -507,4 +511,62 @@ test("Linkding omnibox opens its query and Raycast opens the editor by ID", asyn
     await page.getByLabel("Titel", { exact: true }).inputValue(),
     /Diablo/,
   );
+});
+
+test("a fresh browser starts in English and remembers a switch to German", async () => {
+  const page = await pageFor({}, null);
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  const language = page.getByLabel("Language", { exact: true });
+  assert.equal(await language.inputValue(), "en");
+  await language.selectOption("de");
+  await page.getByRole("dialog", { name: "Einstellungen", exact: true }).waitFor();
+  await page.reload();
+  await page.getByRole("button", { name: "Einstellungen", exact: true }).click();
+  assert.equal(await page.getByLabel("Sprache", { exact: true }).inputValue(), "de");
+});
+
+test("language changes in settings, persists and keeps bookmark search data intact", async () => {
+  const page = await pageFor();
+  await page.locator("#nav-bookmarks").click();
+  await page.locator("#bookmark-query").fill("Loot #diablo");
+  await wait(page, () => document.querySelector("#bookmark-count").textContent === "1 Bookmark");
+  const title = await page.locator(".bookmark-title").textContent();
+  assert.equal(await page.evaluate(() => performance.getEntriesByType("resource")
+    .some(entry => new URL(entry.name).pathname === "/en.js")), false);
+  await page.getByRole("button", {name:"Einstellungen", exact:true}).click();
+  const reads = [];
+  const record = request => reads.push(new URL(request.url()).pathname);
+  page.on("request", record);
+  await page.getByLabel("Sprache", {exact:true}).selectOption("en");
+  await page.getByRole("dialog", {name:"Settings", exact:true}).waitFor();
+  page.off("request", record);
+  assert.deepEqual(reads, ["/en.js"]);
+  assert.equal(await page.locator("html").getAttribute("lang"), "en");
+  assert.equal(await page.getByLabel("Language", {exact:true}).inputValue(), "en");
+  await page.getByRole("button", {name:"Close settings"}).click();
+  assert.equal(await page.getByLabel("Filter bookmarks").inputValue(), "Loot #diablo");
+  assert.equal(await page.locator(".bookmark-title").textContent(), title);
+  await page.getByRole("button", {name:"Edit " + title, exact:true}).click();
+  await page.getByRole("dialog", {name:"Edit bookmark"}).waitFor();
+  assert.equal(await page.getByLabel("Title", {exact:true}).inputValue(), title);
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Meta+p");
+  await page.getByRole("searchbox", {name:"Search bookmarks"}).fill("Loot #diablo");
+  await wait(page, () => document.querySelector("#panel-count").textContent === "1 result");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Meta+k");
+  await page.locator("#command-query").fill("create quicklink list");
+  await page.getByRole("button", {name:"Create quicklink list"}).waitFor();
+  await page.keyboard.press("Escape");
+  await page.reload();
+  await page.getByRole("button", {name:"Settings", exact:true}).click();
+  assert.equal(await page.getByLabel("Language", {exact:true}).inputValue(), "en");
+  await page.getByRole("button", {name:"Sign out", exact:true}).click();
+  await page.getByLabel("Password", {exact:true}).fill("a-long-test-password");
+  await page.getByRole("button", {name:"Open Orbia", exact:true}).click();
+  await page.getByRole("button", {name:"Settings", exact:true}).click();
+  await page.getByLabel("Language", {exact:true}).selectOption("de");
+  await page.getByRole("dialog", {name:"Einstellungen", exact:true}).waitFor();
+  assert.equal(await page.locator("html").getAttribute("lang"), "de");
+  assert.equal(await page.getByLabel("Sprache", {exact:true}).inputValue(), "de");
 });

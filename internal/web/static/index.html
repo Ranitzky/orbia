@@ -22,7 +22,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="/style.css?v=6" />
-    <script src="/app.js?v=3" type="module"></script>
+    <script src="/app.js?v=5" type="module"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Zum Inhalt</a>
@@ -408,6 +408,13 @@
           <svg><use href="#i-close" /></svg>
         </button>
       </div>
+      <section class="settings-section">
+        <label for="language">Sprache</label>
+        <select id="language">
+          <option value="de" lang="de">Deutsch</option>
+          <option value="en" lang="en">English</option>
+        </select>
+      </section>
       <section class="settings-section">
         <h3>Darstellung</h3>
         <button class="button" data-action="theme">
