@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
-	"time"
 )
 
 type handlerTransport struct{ handler http.Handler }
@@ -17,7 +17,7 @@ func (client handlerTransport) RoundTrip(r *http.Request) (*http.Response, error
 	return w.Result(), nil
 }
 
-func TestPullPaginatesAndPreservesLocalBookmarks(t *testing.T) {
+func TestLinkdingImportPaginatesAndPreservesLocalBookmarks(t *testing.T) {
 	source, handler := fixture(t)
 	destination, _ := fixture(t)
 	client := &http.Client{Transport: handlerTransport{handler}}
@@ -31,26 +31,25 @@ func TestPullPaginatesAndPreservesLocalBookmarks(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	pull := func(since string) PullResult {
+	runImport := func() importResult {
 		t.Helper()
-		result, err := destination.Pull(context.Background(), client, "http://source.test", testToken, since)
+		result, err := destination.importLinkding(context.Background(), client, &url.URL{Scheme: "http", Host: "source.test"}, testToken)
 		if err != nil {
 			t.Fatal(err)
 		}
 		return result
 	}
-	if got := pull(""); got != (PullResult{Changed: 103}) {
+	if got := runImport(); got != (importResult{Changed: 103}) {
 		t.Fatal(got)
 	}
-	if got := pull(""); got != (PullResult{Unchanged: 103}) {
+	if got := runImport(); got != (importResult{Unchanged: 103}) {
 		t.Fatal(got)
 	}
-	cutoff := time.Now().UTC().Format(time.RFC3339Nano)
 	_, err = source.Save(1, BookmarkInput{Title: ptr("Updated"), Archived: ptr(true)}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := pull(cutoff); got != (PullResult{Changed: 1}) {
+	if got := runImport(); got != (importResult{Changed: 1, Unchanged: 102}) {
 		t.Fatal(got)
 	}
 	books, count, err := destination.List(Search{Archived: true, Query: "Updated #games", Limit: 10})

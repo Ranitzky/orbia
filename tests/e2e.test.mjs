@@ -597,3 +597,33 @@ test("adding a seventh group shows an error toast", async () => {
   assert.equal(await editor.isVisible(), false);
   assert.equal(await page.locator(".group-card").count(), 6);
 });
+
+test("settings issue and revoke client credentials and import from Linkding", async () => {
+  const page = await pageFor({}, "en");
+  await page.getByRole("button", {name: "Settings", exact: true}).click();
+  await page.getByLabel("App name").fill("Browser test");
+  await page.getByRole("button", {name: "Generate token"}).click();
+  const value = page.getByLabel("New token · copy it now");
+  await value.waitFor();
+  const token = await value.inputValue();
+  const headers = {Authorization: "Token " + token};
+  const client = page.context().request;
+  assert.equal((await client.get(origin + "/api/user/profile/", {headers})).status(), 200);
+  assert.equal((await client.get(origin + "/api/orbia/export", {headers})).status(), 401);
+  await page.getByRole("button", {name:"Close settings"}).click();
+  assert.equal(await value.inputValue(), "");
+  await page.getByRole("button", {name:"Settings", exact:true}).click();
+  page.once("dialog", dialog => dialog.accept());
+  await page.locator("#token-list .copy-field").filter({hasText:"Browser test"}).getByText("Revoke").click();
+  await page.getByText("Token revoked.", {exact:true}).waitFor();
+  assert.equal((await client.get(origin + "/api/user/profile/", {headers})).status(), 401);
+
+  await page.getByLabel("Linkding server", {exact:true}).fill("http://192.168.1.20:9090");
+  await page.getByLabel("Linkding API token", {exact:true}).fill("test-token-with-at-least-32-characters");
+  await page.getByRole("button", {name:"Start import"}).click();
+  await page.getByText("1 changed, 0 unchanged.", {exact:true}).waitFor();
+  assert.equal(await page.locator("#source-token").inputValue(), "");
+  await page.getByRole("button", {name:"Close settings"}).click();
+  await page.locator("#nav-bookmarks").click();
+  await page.getByText("Imported via settings", {exact:true}).waitFor();
+});

@@ -9,7 +9,6 @@ services:
       ORBIA_ADDR: ":8080"
       ORBIA_DB: /data/orbia.db
       ORBIA_PASSWORD: "${ORBIA_PASSWORD:?Set a password of at least 12 characters in .env}"
-      ORBIA_API_TOKEN: "${ORBIA_API_TOKEN:?Set a random token of at least 32 characters in .env}"
       ORBIA_ORIGIN: "${ORBIA_ORIGIN:-}"
       ORBIA_SECURE_COOKIE: "${ORBIA_SECURE_COOKIE:-false}"
       ORBIA_SEED_DEMO: "${ORBIA_SEED_DEMO:-false}"

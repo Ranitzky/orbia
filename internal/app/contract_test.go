@@ -24,7 +24,13 @@ func fixture(t *testing.T) (*Store, *Server) {
 		t.Fatal(e)
 	}
 	t.Cleanup(func() { s.DB.Close() })
-	return s, NewServer(s, Config{Password: testPassword, Token: testToken})
+	if e := s.DB.Write(func(c *sqlite.Conn) error {
+		_, err := c.Exec("INSERT INTO api_tokens(name,digest) VALUES(?,?)", "Test client", tokenDigest(testToken))
+		return err
+	}); e != nil {
+		t.Fatal(e)
+	}
+	return s, NewServer(s, Config{Password: testPassword})
 }
 func request(s *Server, method, path, body string, authorized bool) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, path, strings.NewReader(body))
@@ -146,7 +152,7 @@ func TestPaginationSearchAndPartialUpdates(t *testing.T) {
 	if v["next"] == nil || v["previous"] == nil || !strings.HasPrefix(v["next"].(string), "http://example.com/") {
 		t.Fatal(w.Body.String())
 	}
-	w = request(s, "GET", "/api/orbia/facets?q=%23diablo", "", true)
+	w = signedIn(t, s)("GET", "/api/orbia/facets?q=%23diablo", "", "http://example.com")
 	expectStatus(t, w, 200)
 	if len(object(t, w)["results"].([]any)) != 3 {
 		t.Fatal(w.Body.String())
@@ -216,6 +222,7 @@ func TestSessionSecurity(t *testing.T) {
 
 func TestDashboardValidationAndRevision(t *testing.T) {
 	store, s := fixture(t)
+	session := signedIn(t, s)
 	original, e := store.Dashboard()
 	if e != nil {
 		t.Fatal(e)
@@ -226,18 +233,18 @@ func TestDashboardValidationAndRevision(t *testing.T) {
 	changed := original
 	changed.Pages = append(changed.Pages, Page{ID: "second-page", Name: "Arbeit", Groups: []Group{}})
 	data, _ := json.Marshal(changed)
-	w := request(s, "PUT", "/api/orbia/dashboard", string(data), true)
+	w := session("PUT", "/api/orbia/dashboard", string(data), "http://example.com")
 	expectStatus(t, w, 200)
-	w = request(s, "PUT", "/api/orbia/dashboard", string(data), true)
+	w = session("PUT", "/api/orbia/dashboard", string(data), "http://example.com")
 	expectStatus(t, w, 409)
 	d, _ := store.Dashboard()
 	d.Pages[0].Groups[0].Links[0].Code = d.Pages[0].Groups[0].Links[1].Code
 	data, _ = json.Marshal(d)
-	expectStatus(t, request(s, "PUT", "/api/orbia/dashboard", string(data), true), 400)
+	expectStatus(t, session("PUT", "/api/orbia/dashboard", string(data), "http://example.com"), 400)
 	d, _ = store.Dashboard()
 	d.Pages[0].Groups[0].Links[0].URL = "javascript:alert(1)"
 	data, _ = json.Marshal(d)
-	expectStatus(t, request(s, "PUT", "/api/orbia/dashboard", string(data), true), 400)
+	expectStatus(t, session("PUT", "/api/orbia/dashboard", string(data), "http://example.com"), 400)
 	d, _ = store.Dashboard()
 	if d.Revision != 2 {
 		t.Fatal("invalid change incremented revision")
@@ -246,8 +253,9 @@ func TestDashboardValidationAndRevision(t *testing.T) {
 
 func TestImportExportAndAtomicRollback(t *testing.T) {
 	store, s := fixture(t)
+	session := signedIn(t, s)
 	html := `<!DOCTYPE NETSCAPE-Bookmark-file-1><DL><p><DT><A HREF='https://example.org/?q=a&amp;b=c' ADD_DATE="1700000000" LAST_MODIFIED="1700000100" TAGS="games,arpg,linkding:bookmarks.archived" TOREAD="1" PRIVATE="0">Grüße &amp; Loot</A><DD>Beschreibung[linkding-notes]Meine &lt;Notiz&gt;[/linkding-notes]</DL><p>`
-	w := request(s, "POST", "/api/orbia/import", html, true)
+	w := session("POST", "/api/orbia/import", html, "http://example.com")
 	expectStatus(t, w, 200)
 	books, count, e := store.List(Search{Archived: true, Limit: 100})
 	if e != nil || count != 1 {
@@ -257,27 +265,27 @@ func TestImportExportAndAtomicRollback(t *testing.T) {
 	if b.Notes != "Meine <Notiz>" || b.Description != "Beschreibung" || !b.Shared || !b.Unread || len(b.Tags) != 2 || b.Title != "Grüße & Loot" {
 		t.Fatalf("import mismatch %#v", b)
 	}
-	out := request(s, "GET", "/api/orbia/export?format=html", "", true)
+	out := session("GET", "/api/orbia/export?format=html", "", "http://example.com")
 	expectStatus(t, out, 200)
 	parsed, e := parseHTML(out.Body.Bytes())
 	if e != nil || len(parsed) != 1 || parsed[0].Notes != b.Notes || !parsed[0].Archived {
 		t.Fatalf("HTML roundtrip: %#v %v", parsed, e)
 	}
-	jsonBackup := request(s, "GET", "/api/orbia/export", "", true)
+	jsonBackup := session("GET", "/api/orbia/export", "", "http://example.com")
 	expectStatus(t, jsonBackup, 200)
 	second, secondServer := fixture(t)
-	expectStatus(t, request(secondServer, "POST", "/api/orbia/import", jsonBackup.Body.String(), true), 200)
+	expectStatus(t, signedIn(t, secondServer)("POST", "/api/orbia/import", jsonBackup.Body.String(), "http://example.com"), 200)
 	restored, _, e := second.List(Search{Archived: true, Limit: 100})
 	if e != nil || len(restored) != 1 || restored[0].Notes != b.Notes {
 		t.Fatal("JSON restore failed")
 	}
-	w = request(s, "POST", "/api/orbia/import", `{"version":1,"bookmarks":[{"url":"https://would-be-valid.test","title":"valid"},{"url":"javascript:alert(1)"}]}`, true)
+	w = session("POST", "/api/orbia/import", `{"version":1,"bookmarks":[{"url":"https://would-be-valid.test","title":"valid"},{"url":"javascript:alert(1)"}]}`, "http://example.com")
 	expectStatus(t, w, 400)
 	_, count, e = store.List(Search{Limit: 100})
 	if e != nil || count != 0 {
 		t.Fatal("partial import was not rolled back")
 	}
-	expectStatus(t, request(s, "POST", "/api/orbia/import", `{"version":99}`, true), 400)
+	expectStatus(t, session("POST", "/api/orbia/import", `{"version":99}`, "http://example.com"), 400)
 }
 
 func TestFTSUpdatesDeletesAndTimestampPrecision(t *testing.T) {

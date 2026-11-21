@@ -6,28 +6,35 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"mime"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	"orbia/internal/sqlite"
 	"orbia/internal/web"
 )
 
 type Config struct {
-	Password, Token, Origin string
-	SecureCookie            bool
+	Password, Origin string
+	SecureCookie     bool
 }
 type Server struct {
-	store  *Store
-	auth   *auth
-	static http.Handler
+	store        *Store
+	auth         *auth
+	static       http.Handler
+	importActive atomic.Bool
+	sourceClient *http.Client
 }
 
 func NewServer(s *Store, c Config) *Server {
 	assets, _ := fs.Sub(web.Files, "static")
-	return &Server{store: s, auth: newAuth(c.Password, c.Token, c.SecureCookie, c.Origin), static: http.FileServer(http.FS(assets))}
+	return &Server{
+		store: s, auth: newAuth(c.Password, c.SecureCookie, c.Origin), static: http.FileServer(http.FS(assets)),
+		sourceClient: newLinkdingClient(),
+	}
 }
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -84,7 +91,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/auth/") {
 		w.Header().Set("Cache-Control", "no-store")
-		token := s.auth.apiToken(r)
+		token := s.store.apiToken(r)
 		if r.Method == "OPTIONS" {
 			origin := r.Header.Get("Origin")
 			if strings.HasPrefix(origin, "chrome-extension://") || strings.HasPrefix(origin, "moz-extension://") {
@@ -194,6 +201,24 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(path, "/")
 	method := r.Method
 	switch path {
+	case "api/orbia/tokens", "api/orbia/linkding-import":
+		if r.Header.Get("Authorization") != "" {
+			writeError(w, 403, "Sign in to manage integrations.")
+			return
+		}
+		if method == "POST" {
+			mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+			if err != nil || mediaType != "application/json" {
+				writeError(w, 415, "Expected a JSON request.")
+				return
+			}
+		}
+		if path == "api/orbia/tokens" {
+			s.manageTokens(w, r)
+		} else {
+			s.importLinkding(w, r)
+		}
+		return
 	case "api/orbia/session":
 		if method != "GET" {
 			w.WriteHeader(405)

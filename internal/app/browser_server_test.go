@@ -17,6 +17,11 @@ func TestBrowserServer(t *testing.T) {
 	if err := store.SeedBookmarks(); err != nil {
 		t.Fatal(err)
 	}
+	source, sourceAPI := fixture(t)
+	if _, err := source.Save(0, BookmarkInput{URL: ptr("https://imported.test/"), Title: ptr("Imported via settings")}, false); err != nil {
+		t.Fatal(err)
+	}
+	handler.sourceClient.Transport = handlerTransport{sourceAPI}
 	server := httptest.NewServer(handler)
 	defer server.Close()
 	fmt.Println(server.URL)

@@ -91,10 +91,18 @@ func NewStore(path string) (*Store, error) {
 		if e != nil {
 			return e
 		}
-		if rows[0].Int("user_version") > 1 {
+		version := rows[0].Int("user_version")
+		if version > 3 {
 			return errors.New("database schema is newer than this application")
 		}
+		if version == 2 {
+			// App-issued credentials have positive IDs.
+			if _, e := c.Exec("DELETE FROM api_tokens WHERE id=0"); e != nil {
+				return e
+			}
+		}
 		for _, q := range []string{
+			`CREATE TABLE IF NOT EXISTS api_tokens(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,digest TEXT UNIQUE)`,
 			`CREATE TABLE IF NOT EXISTS bookmarks(id INTEGER PRIMARY KEY AUTOINCREMENT,url TEXT NOT NULL UNIQUE,title TEXT NOT NULL DEFAULT '',description TEXT NOT NULL DEFAULT '',notes TEXT NOT NULL DEFAULT '',is_archived INTEGER NOT NULL DEFAULT 0,unread INTEGER NOT NULL DEFAULT 0,shared INTEGER NOT NULL DEFAULT 0,date_added TEXT NOT NULL,date_modified TEXT NOT NULL)`,
 			`CREATE INDEX IF NOT EXISTS bookmarks_listing ON bookmarks(is_archived,date_added DESC,id DESC)`,
 			`CREATE INDEX IF NOT EXISTS bookmarks_modified ON bookmarks(date_modified)`,
@@ -106,7 +114,7 @@ func NewStore(path string) (*Store, error) {
 			`CREATE TRIGGER IF NOT EXISTS search_delete AFTER DELETE ON bookmarks BEGIN INSERT INTO bookmark_search(bookmark_search,rowid,title,description,notes,url) VALUES('delete',old.id,old.title,old.description,old.notes,old.url); END`,
 			`CREATE TRIGGER IF NOT EXISTS search_update AFTER UPDATE ON bookmarks BEGIN INSERT INTO bookmark_search(bookmark_search,rowid,title,description,notes,url) VALUES('delete',old.id,old.title,old.description,old.notes,old.url); INSERT INTO bookmark_search(rowid,title,description,notes,url) VALUES(new.id,new.title,new.description,new.notes,new.url); END`,
 			`CREATE TABLE IF NOT EXISTS dashboard(id INTEGER PRIMARY KEY CHECK(id=1),revision INTEGER NOT NULL,payload TEXT NOT NULL)`,
-			`PRAGMA user_version=1`,
+			`PRAGMA user_version=3`,
 		} {
 			if _, e := c.Exec(q); e != nil {
 				return e

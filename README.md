@@ -7,7 +7,7 @@ Orbia is a self-hosted keyboard launcher and bookmark library for one person. Th
 ## Run on Unraid
 
 1. Copy the project to your server and copy `.env.example` to `.env`.
-2. Set `ORBIA_PASSWORD` (at least 12 characters) for web login and `ORBIA_API_TOKEN` (at least 32 characters) for clients. Generate each separately, for example with `openssl rand -hex 32`.
+2. Set a unique `ORBIA_PASSWORD` of at least 12 characters for web login. Generate client tokens in Settings after signing in.
 3. Create `/mnt/user/appdata/orbia` and give the configured UID/GID write access. The example uses Unraid's `99:100`. Use local storage with SQLite locking support.
 4. Start the service from the project directory.
 
@@ -29,7 +29,7 @@ For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PG
 | `ORBIA_SECURE_COOKIE` | Set to `true` when serving over HTTPS. |
 | `ORBIA_DB`, `ORBIA_ADDR` | Native process database path and listen address. Compose supplies `/data/orbia.db` and `:8080`. |
 
-Serve Orbia at the root of its own domain. Preserve the Host header and pass `/api/` token requests through the proxy. Browser sessions expire after 24 hours or on server restart. The web password and API token can be rotated by changing the environment and recreating the container.
+Serve Orbia at the root of its own domain. Preserve the Host header and pass `/api/` token requests through the proxy. Browser sessions expire after 24 hours or on server restart. Change the web password in the environment and recreate the container to apply it. Use HTTPS when accessing Orbia across a network so that passwords and API tokens are encrypted in transit.
 
 ## Interface language
 
@@ -53,27 +53,25 @@ The desktop header also accepts the displayed punctuation shortcuts outside text
 
 ## Linkding clients and data transfer
 
-Set the instance URL in Raycast or the official Chrome/Firefox Linkding extension to the Orbia **server root** and supply `ORBIA_API_TOKEN`. Orbia implements the bookmark, tag and profile operations those clients use, including both trailing-slash forms and their browser search/edit links. Contract tests exercise the request sequences. The compatibility notes record the exact client source revisions and unsupported features. [Client contracts](docs/compatibility.md) · [API coverage](docs/linkding-compatibility.md) · [Upstream API](https://linkding.link/api/)
+Open **Settings → Linkding integrations**, enter an app name and select **Generate token**. Copy the token before closing Settings. Enter the displayed Orbia server address and the token in Raycast or the Chrome/Firefox Linkding extension. Each token can read and modify the bookmark library through the Linkding-compatible API. Select **Revoke** beside an app to stop its access immediately.
+
+Token hashes are stored in SQLite and excluded from HTML and JSON exports.
+
+Orbia implements the bookmark, tag and profile operations those clients use, including both trailing-slash forms and their browser search/edit links. Contract tests exercise the request sequences. The compatibility notes record the exact client source revisions and unsupported features. [Client contracts](docs/compatibility.md) · [API coverage](docs/linkding-compatibility.md) · [Upstream API](https://linkding.link/api/)
 
 **Settings → Import & Export** accepts Netscape bookmark HTML from Linkding and browsers. HTML preserves tags, descriptions, Linkding notes, archive/unread/shared flags and second-resolution timestamps. JSON backups also include dashboard pages and unused tags. File imports merge by URL in one transaction. Restoring a dashboard from JSON replaces the current pages. Database IDs are local. The import limit is 20 MiB.
 
-### Pull bookmarks from a running Linkding server
+### Import bookmarks from a running Linkding server
 
-Set `LINKDING_TOKEN` in the shell environment to a token for the source server. The command reads the token from the environment and writes to Orbia's local database.
+In **Settings → Import from Linkding**, enter the address of your Linkding installation and an API token issued by that installation. Choose **Start import** and keep the tab open for the result. Orbia reads active and archived bookmarks in batches. Matching URLs take their titles, notes, tags and flags from Linkding. The source token is used for this request only. For HTTPS, Orbia must trust the source certificate. On a trusted LAN, an Unraid installation can use an address such as `http://192.168.1.20:9090` (use your host IP and published Linkding port) or a Docker service name on a shared network. For HTTP, the import accepts only private IPv4, IPv6 unique-local, or loopback addresses. Every resolved address must qualify. Orbia connects directly to a checked IP and skips HTTP proxies. Both schemes reject redirects. HTTP exposes the source token to anyone able to observe the local connection. When opening Orbia from the internet, access Orbia itself over HTTPS as well. Only one UI import runs at a time, with a ten-minute deadline. If interrupted, completed batches are retained and you can start the import again.
 
-```sh
-docker compose exec -T -e LINKDING_TOKEN orbia /app/orbia pull --from https://linkding.example.com
-```
-
-The pull reads both active and archived pages. It inserts new URLs, applies the source's title, notes, tags and flags to matching URLs, and skips unchanged records. To fetch recent changes, add `--since 2026-11-01T00:00:00Z` with your own cutoff. A failed page rolls back. Earlier pages remain committed and the command can be rerun. Refresh an open library to see changes.
-
-This is a one-way merge. A source-side deletion or URL change leaves the old URL in Orbia. There is no automatic schedule, two-way conflict resolver or deletion feed. For a busy source, repeat the pull with overlapping cutoffs to pick up changes during offset pagination. The pull requires API access to the source from inside the container. No component retrieves the contents of bookmarked pages.
+You can repeat an import to pick up new or edited bookmarks. Orbia skips unchanged records and keeps local bookmarks when a URL is deleted or renamed on the source. The Orbia container must be able to reach the Linkding server.
 
 For a full backup with stable IDs, stop the container, copy its **entire** data directory, then restart it. Restore that directory with the container stopped and the correct owner. Keep a separate copy of your configuration.
 
 ## Develop and test
 
-A native build requires Go 1.26+, a C compiler, SQLite headers and a library with FTS5. On Debian/Ubuntu install `build-essential libsqlite3-dev`. Export `ORBIA_PASSWORD` and `ORBIA_API_TOKEN` before running `go run ./cmd/orbia`. The native process reads its environment. Compose reads `.env`.
+A native build requires Go 1.26+, a C compiler, SQLite headers and a library with FTS5. On Debian/Ubuntu install `build-essential libsqlite3-dev`. Export `ORBIA_PASSWORD` before running `go run ./cmd/orbia`. The native process reads its environment. Compose reads `.env`.
 
 ```sh
 go test -race ./...

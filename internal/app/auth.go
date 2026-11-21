@@ -20,30 +20,22 @@ type auth struct {
 	passwordHash []byte
 	salt         []byte
 	key          []byte
-	tokenHash    [32]byte
-	secure       bool
-	origin       string
-	mu           sync.Mutex
-	failures     int
-	window       time.Time
-	sessions     map[string]int64
+
+	secure   bool
+	origin   string
+	mu       sync.Mutex
+	failures int
+	window   time.Time
+	sessions map[string]int64
 }
 
-func newAuth(password, token string, secure bool, origin string) *auth {
+func newAuth(password string, secure bool, origin string) *auth {
 	salt := make([]byte, 32)
 	key := make([]byte, 32)
 	rand.Read(salt)
 	rand.Read(key)
 	hash, _ := pbkdf2.Key(sha256.New, password, salt, 210000, 32)
-	return &auth{passwordHash: hash, salt: salt, key: key, tokenHash: sha256.Sum256([]byte(token)), secure: secure, origin: strings.TrimRight(origin, "/"), sessions: map[string]int64{}}
-}
-func (a *auth) apiToken(r *http.Request) bool {
-	parts := strings.Fields(r.Header.Get("Authorization"))
-	if len(parts) != 2 || (!strings.EqualFold(parts[0], "Token") && !strings.EqualFold(parts[0], "Bearer")) {
-		return false
-	}
-	sum := sha256.Sum256([]byte(parts[1]))
-	return subtle.ConstantTimeCompare(sum[:], a.tokenHash[:]) == 1
+	return &auth{passwordHash: hash, salt: salt, key: key, secure: secure, origin: strings.TrimRight(origin, "/"), sessions: map[string]int64{}}
 }
 func (a *auth) signature(v string) string {
 	h := hmac.New(sha256.New, a.key)

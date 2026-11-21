@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -33,24 +31,12 @@ func main() {
 func run() error {
 	// Keep database, WAL and shared-memory files private to the process user.
 	syscall.Umask(0077)
-	pull := len(os.Args) > 1 && os.Args[1] == "pull"
-	var source, since string
-	if pull {
-		flags := flag.NewFlagSet("orbia pull", flag.ContinueOnError)
-		flags.StringVar(&source, "from", "", "Linkding server root URL")
-		flags.StringVar(&since, "since", "", "optional modification cutoff in RFC 3339 format")
-		if err := flags.Parse(os.Args[2:]); err != nil {
-			return err
-		}
-		if source == "" || flags.NArg() != 0 {
-			return errors.New("usage: orbia pull --from URL [--since TIMESTAMP]")
-		}
-	} else if len(os.Args) != 1 {
-		return errors.New("usage: orbia [pull --from URL]")
+	if len(os.Args) != 1 {
+		return errors.New("usage: orbia")
 	}
-	password, token := os.Getenv("ORBIA_PASSWORD"), os.Getenv("ORBIA_API_TOKEN")
-	if !pull && (len(password) < 12 || len(token) < 32) {
-		return errors.New("set ORBIA_PASSWORD (12+ characters) and ORBIA_API_TOKEN (32+ characters); see .env.example")
+	password := os.Getenv("ORBIA_PASSWORD")
+	if len(password) < 12 {
+		return errors.New("set ORBIA_PASSWORD (12+ characters); see .env.example")
 	}
 	path := env("ORBIA_DB", "./data/orbia.db")
 	if e := os.MkdirAll(filepath.Dir(path), 0700); e != nil {
@@ -64,14 +50,6 @@ func run() error {
 	if e = os.Chmod(path, 0600); e != nil {
 		return e
 	}
-	if pull {
-		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-		defer stop()
-		client := &http.Client{Timeout: 60 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-		result, err := store.Pull(ctx, client, source, os.Getenv("LINKDING_TOKEN"), since)
-		fmt.Printf("%d bookmarks changed, %d unchanged\n", result.Changed, result.Unchanged)
-		return err
-	}
 	if os.Getenv("ORBIA_SEED_DEMO") == "true" {
 		if e = store.SeedBookmarks(); e != nil {
 			return e
@@ -84,7 +62,7 @@ func run() error {
 			return errors.New("ORBIA_ORIGIN must be an http(s) origin without a path, credentials, query or fragment")
 		}
 	}
-	handler := app.NewServer(store, app.Config{Password: password, Token: token, Origin: origin, SecureCookie: os.Getenv("ORBIA_SECURE_COOKIE") == "true"})
+	handler := app.NewServer(store, app.Config{Password: password, Origin: origin, SecureCookie: os.Getenv("ORBIA_SECURE_COOKIE") == "true"})
 	server := &http.Server{Addr: env("ORBIA_ADDR", ":8080"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 60 * time.Second, WriteTimeout: 120 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 32 << 10}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

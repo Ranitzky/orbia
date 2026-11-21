@@ -63,7 +63,7 @@ func (d *DB) Close() error {
 	return nil
 }
 
-// Hold one SQLite snapshot across related reads, including during a CLI pull.
+// Hold one SQLite snapshot across related reads.
 func (d *DB) Read(fn func(*Conn) error) error  { return d.transaction("BEGIN", fn) }
 func (d *DB) Write(fn func(*Conn) error) error { return d.transaction("BEGIN IMMEDIATE", fn) }
 

@@ -64,7 +64,7 @@ async function setLanguage(value, persist = false) {
   const select = $("#language");
   select.disabled = true;
   try {
-    english = value === "en" ? (await import("./en.js?v=1")).default : null;
+    english = value === "en" ? (await import("./en.js?v=3")).default : null;
   } catch {
     select.value = document.documentElement.lang;
     toast("Die Sprachdatei konnte nicht geladen werden. / Could not load the language file.", true);
@@ -75,6 +75,7 @@ async function setLanguage(value, persist = false) {
   const lang = english ? "en" : "de";
   document.documentElement.lang = lang;
   select.value = lang;
+  renderTokens();
   for (const update of shellCopy) update();
   if (persist) preference("language", lang);
   theme(document.documentElement.dataset.theme);
@@ -161,7 +162,17 @@ async function api(path, options = {}) {
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     if (response.status === 401 && !path.startsWith("/auth/")) showLogin();
-    const error = new Error(errorMessage(response.status, data));
+    let message = errorMessage(response.status, data);
+    if (path === pullPath) {
+      if (response.status === 400) message = t("Bitte gib eine HTTP- oder HTTPS-Adresse und den Linkding-Token ein.");
+      if (response.status === 422) message = t("HTTP ist nur für lokale Adressen erlaubt. Verwende für öffentliche Ziele HTTPS.");
+      if (response.status === 409) message = t("Ein Import läuft bereits.");
+      if (response.status === 502) {
+        message = t("Import unterbrochen. Prüfe Adresse, Zertifikat und Linkding-Token.");
+      }
+      if (Number.isInteger(data.changed)) message += " " + t("{changed} geändert, {unchanged} unverändert.", data);
+    }
+    const error = new Error(message);
     error.status = response.status;
     throw error;
   }
@@ -895,7 +906,104 @@ async function editBookmark(id) {
       : null,
   );
 }
+const tokensPath = "/api/orbia/tokens";
+const pullPath = "/api/orbia/linkding-import";
+let tokenEntries = [];
+let settingsGeneration = 0;
+
+function integrationStatus(id, message, error = false) {
+  const el = $(id);
+  el.textContent = message;
+  el.classList.toggle("error", error);
+}
+function renderTokens() {
+  $("#token-list").replaceChildren(...tokenEntries.map(entry => {
+    const row = document.createElement("div");
+    row.className = "copy-field";
+    const name = document.createElement("span");
+    name.textContent = entry.name;
+    const button = document.createElement("button");
+    button.className = "text-button danger-text";
+    button.textContent = t("Widerrufen");
+    button.addEventListener("click", async () => {
+      if (!confirm(t("Token für {name} widerrufen? Die App verliert sofort ihren Zugriff.", {name: entry.name}))) return;
+      button.disabled = true;
+      try {
+        await api(tokensPath + "?id=" + entry.id, {method: "DELETE"});
+        clearNewToken();
+        await loadTokens();
+        integrationStatus("#token-status", t("Token widerrufen."));
+      } catch (error) {
+        integrationStatus("#token-status", error.message, true);
+      } finally {
+        button.disabled = false;
+      }
+    });
+    row.append(name, button);
+    return row;
+  }));
+}
+async function loadTokens() {
+  const generation = settingsGeneration;
+  const entries = await api(tokensPath);
+  if (generation !== settingsGeneration) return;
+  tokenEntries = entries;
+  renderTokens();
+}
+function clearNewToken() {
+  $("#token-value").value = "";
+  $("#new-token").hidden = true;
+}
+$("#settings-dialog").addEventListener("close", () => {
+  settingsGeneration++;
+  clearNewToken();
+  $("#source-token").value = "";
+});
+$("#token-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const button = event.submitter || $("#token-form button");
+  const generation = settingsGeneration;
+  button.disabled = true;
+  clearNewToken();
+  integrationStatus("#token-status", "");
+  try {
+    const result = await api(tokensPath, {method: "POST", body: JSON.stringify({name: $("#token-name").value})});
+    if (generation !== settingsGeneration || !$("#settings-dialog").open) return;
+    $("#token-name").value = "";
+    $("#token-value").value = result.token;
+    $("#new-token").hidden = false;
+    $("#token-value").select();
+    await loadTokens();
+  } catch (error) {
+    integrationStatus("#token-status", error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+});
+$("#pull-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const button = $("#pull-form button");
+  button.disabled = true;
+  integrationStatus("#pull-status", t("Import läuft …"));
+  const body = JSON.stringify({url: $("#source-url").value.trim(), token: $("#source-token").value.trim()});
+  $("#source-token").value = "";
+  try {
+    const result = await api(pullPath, {method: "POST", body});
+    integrationStatus("#pull-status", t("{changed} geändert, {unchanged} unverändert.", result));
+  } catch (error) {
+    integrationStatus("#pull-status", error.message, true);
+  } finally {
+    button.disabled = false;
+    if (state.authenticated && state.mode === "bookmarks") await loadBookmarks();
+  }
+});
+
 function openSettings() {
+  settingsGeneration++;
+  tokenEntries = [];
+  renderTokens();
+  integrationStatus("#token-status", "");
+  loadTokens().catch(error => integrationStatus("#token-status", error.message, true));
   $("#server-url").textContent = location.origin;
   $("#import-status").textContent = "";
   openDialog("#settings-dialog");
@@ -968,6 +1076,16 @@ const actions = {
     state.query = $("#panel-query").value;
     state.archived = false;
     setMode("bookmarks");
+  },
+  "copy-token": async () => {
+    const input = $("#token-value");
+    try {
+      await navigator.clipboard.writeText(input.value);
+      integrationStatus("#token-status", t("Token kopiert."));
+    } catch {
+      input.select();
+      integrationStatus("#token-status", t("Der Token ist markiert. Bitte kopiere ihn."));
+    }
   },
   "copy-url": async () => {
     try {

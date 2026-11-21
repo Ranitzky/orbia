@@ -21,8 +21,8 @@
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="/style.css?v=6" />
-    <script src="/app.js?v=7" type="module"></script>
+    <link rel="stylesheet" href="/style.css?v=7" />
+    <script src="/app.js?v=9" type="module"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Zum Inhalt</a>
@@ -425,16 +425,37 @@
       <section class="settings-section">
         <h3>Linkding-Integrationen</h3>
         <p>
-          Diese Server-Adresse in Raycast oder der Linkding-Erweiterung
-          eintragen. Verwende den API-Token aus deiner Server-Konfiguration.
+          Erstelle für jede App einen eigenen Token. Trage ihn zusammen mit dieser Orbia-Adresse in der App ein.
         </p>
         <div class="copy-field">
           <code id="server-url"></code
           ><button class="text-button" data-action="copy-url">Kopieren</button>
         </div>
-        <p class="small muted">
-          Bookmarks lassen sich mit dem Serverbefehl „orbia pull“ aus einer Linkding-Instanz übernehmen.
-        </p>
+        <form class="integration-form" id="token-form" method="post">
+          <label for="token-name">Name der App</label>
+          <input id="token-name" required maxlength="80" placeholder="Raycast" />
+          <button class="button" type="submit">Token erstellen</button>
+        </form>
+        <div id="new-token" hidden>
+          <label for="token-value">Neuer Token · jetzt kopieren</label>
+          <div class="copy-field"><input id="token-value" readonly autocomplete="off" spellcheck="false" />
+            <button class="text-button" data-action="copy-token">Kopieren</button></div>
+        </div>
+        <div id="token-list"></div>
+        <p id="token-status" class="small" role="status"></p>
+      </section>
+      <section class="settings-section">
+        <h3>Aus Linkding importieren</h3>
+        <p>Orbia übernimmt aktive und archivierte Bookmarks. Bei gleicher URL gelten die Daten aus Linkding.</p>
+        <form class="integration-form" id="pull-form" method="post">
+          <label for="source-url">Linkding-Server</label>
+          <input id="source-url" type="url" required aria-describedby="source-hint" placeholder="http://192.168.1.20:9090" />
+          <p id="source-hint" class="small muted">HTTP überträgt den Token im lokalen Netz unverschlüsselt. Nutze HTTP nur in einem vertrauenswürdigen Netz. Öffentliche Ziele erfordern HTTPS.</p>
+          <label for="source-token">API-Token von Linkding</label>
+          <input id="source-token" type="password" required autocomplete="off" />
+          <button class="button" type="submit">Import starten</button>
+        </form>
+        <p id="pull-status" role="status" class="small"></p>
       </section>
       <section class="settings-section">
         <h3>Import & Export</h3>

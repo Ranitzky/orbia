@@ -1256,6 +1256,15 @@ dialog::backdrop {
   border-radius: 5px;
   background: var(--bg);
 }
+.integration-form {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+.integration-form button { justify-self: start; }
+#token-list .copy-field { margin-top: 8px; overflow-wrap: anywhere; }
+#token-value { min-width: 0; flex: 1; }
+.settings-section p.error { color: var(--danger); }
 .copy-field code {
   font-size: 0.875rem;
   overflow-wrap: anywhere;

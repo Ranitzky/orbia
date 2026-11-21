@@ -25,7 +25,7 @@ The Docker build and runtime use the same Alpine release to keep their native SQ
 | Login sessions | Signed opaque cookies backed by an in-memory nonce registry |
 | Theme/view/page preference | Browser localStorage; not part of the server backup |
 
-The optional pull command opens its own connection, commits each source page atomically and skips unchanged entries. Multi-statement reads hold a SQLite snapshot while the CLI writes.
+The Linkding import commits each source page atomically and skips unchanged bookmarks.
 
 The connection uses WAL, foreign keys, a five-second busy timeout, and normal synchronous mode. A Go mutex serializes operations on one native connection. Transactional writes use `BEGIN IMMEDIATE` and roll back on errors or panic. This is adequate for a single-user 10k library, and avoids transaction interleaving. It is not intended for high-concurrency multi-user use. A future SQLite connection pool should preserve the same Store operations; it would need careful WAL and transaction testing. WAL mode does not make an unlocked live database-file copy a valid backup.
 
@@ -46,11 +46,13 @@ Dashboard writes include the revision that was read. A stale update returns 409;
 - `internal/app/transfer.go`: consistent export and transactional merge import.
 - `internal/web`: buildless browser application and local assets.
 
-New database migrations should advance `PRAGMA user_version`. The server refuses a database created by a newer schema. Back up the database before upgrading. No speculative migrations beyond version 1 are included.
+New database migrations should advance `PRAGMA user_version`. The server refuses a database created by a newer schema. Back up the database before upgrading. Schema version 3 retains tokens issued through Settings.
 
 ## Authentication and deployment
 
-Credentials come from environment variables; no default production credentials exist. The web password is compared using PBKDF2-HMAC-SHA256 with a random process salt and 210,000 iterations. API tokens are compared as constant-time SHA-256 digests. Sessions expire after 24 hours, are HttpOnly and SameSite Strict, and can be revoked on logout. The registry holds at most 32 sessions. Restarting the process invalidates all browser sessions. Token rotation or password changes require restarting the process.
+The owner sets the sign-in password through the environment. The web password is compared using PBKDF2-HMAC-SHA256 with a random process salt and 210,000 iterations. Settings generates 256-bit random app tokens and returns each secret once. SQLite indexes their SHA-256 digests. App tokens grant access to the Linkding client routes. Sessions expire after 24 hours, are HttpOnly and SameSite Strict, and can be revoked on logout. The registry holds at most 32 sessions. Restarting the process invalidates all browser sessions. Token creation and revocation take effect immediately. Password changes take effect at restart.
+
+Token management and remote imports require a browser session. The Settings import fetches fixed bookmark paths and rejects redirects. HTTPS uses normal certificate verification. Plain HTTP uses a separate proxy-free transport. Each new connection resolves the host, checks every result for a private or loopback address, and dials an approved numeric IP directly. Mixed public/private DNS responses and link-local addresses are rejected before an authenticated request can be sent. The source token stays in request memory.
 
 Login attempts use a bounded global bucket. Ten unsuccessful attempts within a minute block login until the next window. This avoids trusting spoofable proxy headers but means an attacker could temporarily block the owner's login; a reverse proxy can add stronger controls. API requests need a session or token. An explicitly invalid Authorization header cannot fall back to a valid cookie.
 

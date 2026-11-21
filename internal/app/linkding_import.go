@@ -15,42 +15,27 @@ import (
 	"orbia/internal/sqlite"
 )
 
-// PullResult counts committed changes, including pages committed before a later error.
-type PullResult struct {
+// importResult counts committed changes, including pages committed before a later error.
+type importResult struct {
 	Changed   int
 	Unchanged int
 }
 
-// Pull imports active and archived bookmarks from a Linkding server. The source owns
+// importLinkding imports active and archived bookmarks from a Linkding server. The source owns
 // the saved fields for matching URLs. Local-only bookmarks and dashboard pages survive.
-func (s *Store) Pull(ctx context.Context, client *http.Client, base, token, since string) (PullResult, error) {
-	var total PullResult
-	u, err := url.Parse(base)
-	if err != nil || u.Hostname() == "" || u.User != nil || (u.Scheme != "http" && u.Scheme != "https") || u.RawQuery != "" || u.Fragment != "" {
-		return total, fmt.Errorf("use the HTTP(S) server root without credentials or a query")
-	}
-	if token == "" {
-		return total, fmt.Errorf("set LINKDING_TOKEN to the source API token")
-	}
-	if since != "" {
-		if _, err = time.Parse(time.RFC3339Nano, since); err != nil {
-			return total, fmt.Errorf("since must be an RFC 3339 timestamp")
-		}
-	}
+func (s *Store) importLinkding(ctx context.Context, client *http.Client, source *url.URL, token string) (importResult, error) {
+	var total importResult
 	for _, path := range []string{"api/bookmarks/", "api/bookmarks/archived/"} {
-		endpoint := *u
+		endpoint := *source
 		endpoint.Path = strings.TrimRight(endpoint.Path, "/") + "/" + path
 		for offset := 0; ; {
 			query := url.Values{"limit": {"100"}, "offset": {strconv.Itoa(offset)}}
-			if since != "" {
-				query.Set("modified_since", since)
-			}
 			endpoint.RawQuery = query.Encode()
 			page, more, err := fetchPage(ctx, client, endpoint.String(), token)
 			if err != nil {
 				return total, fmt.Errorf("%s offset %d: %w", path, offset, err)
 			}
-			var batch PullResult
+			var batch importResult
 			err = s.DB.Write(func(c *sqlite.Conn) error {
 				for _, b := range page {
 					if err := ctx.Err(); err != nil {
