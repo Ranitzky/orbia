@@ -570,10 +570,10 @@ function availableCommands() {
     {
       label: t("Quicklink hinzufügen"),
       icon: "plus",
-      key: "⌘ +",
+      key: state.mode === "dashboard" ? "+" : "",
       run: () => editLink(),
     },
-    { label: t("Bookmark hinzufügen"), icon: "plus", run: () => editBookmark() },
+    { label: t("Bookmark hinzufügen"), icon: "plus", key: state.mode === "bookmarks" ? "+" : "", run: () => editBookmark() },
     {
       label: state.edit ? t("Bearbeitungsmodus beenden") : t("Dashboard bearbeiten"),
       icon: "edit",
@@ -1189,14 +1189,6 @@ document.addEventListener("keydown", (event) => {
   if (modifier && key === "e") {
     event.preventDefault();
     toggleEdit();
-    return;
-  }
-  if (
-    modifier &&
-    (event.key === "+" || event.key === "=" || event.code === "NumpadAdd")
-  ) {
-    event.preventDefault();
-    editLink();
     return;
   }
   if (modifier) return;

@@ -243,7 +243,15 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
     await page.getByText("Immich Fotos", { exact: true }).count(),
     1,
   );
-  await page.keyboard.press("Meta+=");
+  for (const modifier of ["ctrlKey", "metaKey"]) {
+    for (const key of ["+", "="]) {
+      const unhandled = await page.evaluate(({ modifier, key }) =>
+        document.dispatchEvent(new KeyboardEvent("keydown", { key, [modifier]: true, cancelable: true })),
+        { modifier, key });
+      assert.equal(unhandled, true);
+    }
+  }
+  await page.keyboard.press("+");
   await page.getByLabel("Name", { exact: true }).fill("Duplicate");
   await page.getByLabel("Kürzel", { exact: true }).fill("IMM");
   await page
@@ -277,7 +285,7 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
   await page.getByLabel("Name", { exact: true }).fill("Projekte");
   await page.getByRole("button", { name: "Speichern", exact: true }).click();
   await page.locator("#editor-dialog").waitFor({ state: "hidden" });
-  await page.keyboard.press("Meta+=");
+  await page.keyboard.press("+");
   await page.getByLabel("Name", { exact: true }).fill("Projekt");
   await page.getByLabel("Kürzel", { exact: true }).fill("PRJ");
   await page
