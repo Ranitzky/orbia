@@ -824,7 +824,7 @@ function editLink(id, groupID) {
       "name",
       "Name",
       link?.name,
-      'required maxlength="200" autocomplete="off"',
+      'required maxlength="200" autocomplete="off" data-1p-ignore',
     ) +
     `<div class="form-row">${inputField("code", t("Kürzel"), link?.code, 'required pattern="[A-Za-z0-9]{3}" minlength="3" maxlength="3" placeholder="IMM" autocomplete="off" style="text-transform:uppercase"')}<label for="field-group">${t("Gruppe")}<select name="group" id="field-group">${page.groups.map((g) => `<option value="${escapeHTML(g.id)}" ${g.id === groupID ? "selected" : ""}>${escapeHTML(g.name)}</option>`).join("")}</select></label></div>` +
     inputField(
@@ -930,7 +930,7 @@ function editPage(create) {
       "name",
       "Name",
       create ? "" : page.name,
-      `required maxlength="80" placeholder="${t("Zum Beispiel Arbeit")}"`,
+      `required maxlength="80" placeholder="${t("Zum Beispiel Arbeit")}" data-1p-ignore`,
     ) +
       `<p class="field-hint">${create ? t("Die neue Seite startet leer. Füge anschließend deine Gruppen und Quicklinks hinzu.") : t("Diese Seite hat eigene Gruppen und Quicklinks. Bookmarks bleiben in der gemeinsamen Sammlung.")}</p>`,
     async (form) => {
@@ -973,7 +973,7 @@ async function editBookmark(id) {
         "title",
         t("Titel"),
         b?.title,
-        `maxlength="512" placeholder="${t("Ein Name zum Wiederfinden")}"`,
+        `maxlength="512" placeholder="${t("Ein Name zum Wiederfinden")}" data-1p-ignore`,
       ) +
       textareaField("description", t("Beschreibung"), b?.description) +
       inputField(
