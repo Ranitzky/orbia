@@ -612,7 +612,7 @@ test("settings issue and revoke client credentials and import from Linkding", as
   assert.equal((await client.get(origin + "/api/user/profile/", {headers})).status(), 200);
   assert.equal((await client.get(origin + "/api/orbia/export", {headers})).status(), 401);
   await page.getByRole("button", {name:"Close settings"}).click();
-  assert.equal(await value.inputValue(), "");
+  await wait(page, () => document.querySelector("#token-value").value === "");
   await page.getByRole("button", {name:"Settings", exact:true}).click();
   page.once("dialog", dialog => dialog.accept());
   await page.locator("#token-list .copy-field").filter({hasText:"Browser test"}).getByText("Revoke").click();
