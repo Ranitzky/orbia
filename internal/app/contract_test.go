@@ -220,18 +220,18 @@ func TestDashboardValidationAndRevision(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if len(original.Pages[0].Groups) != 6 {
-		t.Fatal("default dashboard must match six-group reference")
+	if e := validateDashboard(original); e != nil {
+		t.Fatalf("invalid default dashboard: %v", e)
 	}
 	changed := original
-	changed.Pages = append(changed.Pages, Page{ID: "work", Name: "Arbeit", Groups: []Group{}})
+	changed.Pages = append(changed.Pages, Page{ID: "second-page", Name: "Arbeit", Groups: []Group{}})
 	data, _ := json.Marshal(changed)
 	w := request(s, "PUT", "/api/orbia/dashboard", string(data), true)
 	expectStatus(t, w, 200)
 	w = request(s, "PUT", "/api/orbia/dashboard", string(data), true)
 	expectStatus(t, w, 409)
 	d, _ := store.Dashboard()
-	d.Pages[0].Groups[0].Links[0].Code = "IMM"
+	d.Pages[0].Groups[0].Links[0].Code = d.Pages[0].Groups[0].Links[1].Code
 	data, _ = json.Marshal(d)
 	expectStatus(t, request(s, "PUT", "/api/orbia/dashboard", string(data), true), 400)
 	d, _ = store.Dashboard()

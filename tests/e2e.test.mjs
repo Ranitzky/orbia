@@ -99,7 +99,7 @@ test("main navigation highlights only the current view", async () => {
 });
 
 test("dashboard and bookmark cards retain their responsive layout", async () => {
-  const page = await pageFor();
+  const page = await pageFor({}, null);
   if (process.env.ORBIA_SCREENSHOTS) {
     await mkdir(process.env.ORBIA_SCREENSHOTS, { recursive: true });
     await page.setViewportSize({ width: 1671, height: 941 });
@@ -176,7 +176,7 @@ test("quick status reserves space between the grid and the input", async () => {
     await page.setViewportSize({width, height: 844});
     await page.locator("#quick-input").focus();
     const before = await positions();
-    await page.keyboard.type("i");
+    await page.keyboard.type("f");
     assert.deepEqual(await positions(), before);
     const gridBox = await grid.boundingBox();
     const statusBox = await status.boundingBox();
@@ -192,35 +192,29 @@ test("quick status reserves space between the grid and the input", async () => {
   }
 });
 
-test("dashboard reference, prefix-only search, target preview and Enter navigation", async () => {
+test("default quicklinks, prefix-only search, target preview and Enter navigation", async () => {
   const page = await pageFor();
-  assert.equal(await page.locator(".group-card").count(), 6);
-  const columns = await page
-    .locator("#groups")
-    .evaluate(
-      (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
-    );
-  assert.equal(columns, 3);
-  assert.equal(await page.locator(".quicklink").count(), 24);
-  await page.keyboard.type("i");
+  const names = await page.locator(".quick-name").allTextContents();
+  assert.deepEqual(names, ["Amazon", "eBay", "Gmail", "GitHub", "Figma", "Notion", "Booking.com"]);
+  await page.keyboard.type("f");
   assert.equal(await page.locator(".quicklink.matched").count(), 1);
   assert.match(
     await page.locator("#quick-status").textContent(),
-    /Immich.*http:\/\/immich\.local/s,
+    /Figma.*https:\/\/www\.figma\.com/s,
   );
-  assert.equal(await page.locator(".quicklink.dimmed").count(), 23);
+  assert.equal(await page.locator(".quicklink.dimmed").count(), 6);
   await page.keyboard.press("Escape");
-  await page.keyboard.type("next");
+  await page.keyboard.type("amazon");
   assert.equal(await page.locator(".quicklink.matched").count(), 0);
   await page.keyboard.press("Escape");
-  await page.keyboard.type("i");
+  await page.keyboard.type("f");
   let navigated = false;
-  await context.route("http://immich.local/**", async (route) => {
+  await context.route("https://www.figma.com/**", async (route) => {
     navigated = true;
-    await route.fulfill({ body: "<title>Immich target</title>Immich" });
+    await route.fulfill({ body: "<title>Figma target</title>Figma" });
   });
   await page.keyboard.press("Enter");
-  await page.waitForURL("http://immich.local/");
+  await page.waitForURL("https://www.figma.com/");
   assert.equal(navigated, true);
 });
 
@@ -232,15 +226,15 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
     "true",
   );
   await page
-    .getByRole("link", { name: "Immich bearbeiten", exact: true })
+    .getByRole("link", { name: "Amazon bearbeiten", exact: true })
     .click();
-  await page.getByLabel("Name", { exact: true }).fill("Immich Fotos");
+  await page.getByLabel("Name", { exact: true }).fill("Amazon Shopping");
   await page.getByRole("button", { name: "Speichern", exact: true }).click();
   await page.locator("#editor-dialog").waitFor({ state: "hidden" });
   await page.reload();
   await page.locator("#app").waitFor({ state: "visible" });
   assert.equal(
-    await page.getByText("Immich Fotos", { exact: true }).count(),
+    await page.getByText("Amazon Shopping", { exact: true }).count(),
     1,
   );
   for (const modifier of ["ctrlKey", "metaKey"]) {
@@ -253,7 +247,7 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
   }
   await page.keyboard.press("+");
   await page.getByLabel("Name", { exact: true }).fill("Duplicate");
-  await page.getByLabel("Kürzel", { exact: true }).fill("IMM");
+  await page.getByLabel("Kürzel", { exact: true }).fill("AMZ");
   await page
     .getByLabel("Ziel-URL", { exact: true })
     .fill("https://duplicate.test");
@@ -274,7 +268,7 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
   await page.keyboard.press("1");
   assert.match(
     await page.locator(".page-tab[aria-selected=true]").textContent(),
-    /Zuhause/,
+    /Home/,
   );
   await page.keyboard.press("2");
   assert.match(
@@ -436,8 +430,8 @@ test("iPhone viewport, touch controls, visible focus, escaping and screenshots",
       (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
     );
   assert.equal(columns, 1);
-  await page.locator("#quick-input").fill("IM");
-  assert.match(await page.locator("#quick-status").textContent(), /Immich/);
+  await page.locator("#quick-input").fill("FI");
+  assert.match(await page.locator("#quick-status").textContent(), /Figma/);
   await page.locator("#quick-input").fill("");
   await page.locator('.mobile-nav [data-action="search"]').click();
   await page.locator("#panel-query").fill("Loot");

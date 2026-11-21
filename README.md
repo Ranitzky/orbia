@@ -2,7 +2,7 @@
 
 Orbia is a self-hosted keyboard launcher and bookmark library for one person. The dashboard opens quicklinks by three-character code. The library searches saved titles, URLs, descriptions and notes, with exact tag filters. Both use the same Go process and SQLite database. The browser loads HTML, CSS, JavaScript and JetBrains Mono from your server.
 
-![Orbia quick dashboard with six color-coded groups](docs/dashboard.png)
+![Orbia quick dashboard with color-coded quicklink groups](docs/dashboard.png)
 
 ## Run on Unraid
 
@@ -17,7 +17,7 @@ docker compose up -d --build --wait
 docker compose ps
 ```
 
-Open `http://<unraid-host>:8080`. The six initial groups contain the links from the reference screenshot. Addresses such as `http://immich.local/` are examples. Use **Cmd/Ctrl+E** to configure them. The bookmark library starts empty. Set `ORBIA_SEED_DEMO=true` for a first launch with six example bookmarks, then switch it off to keep an emptied library empty on restart.
+Open `http://<unraid-host>:8080`. New databases start with a **Home** dashboard linking to Amazon, eBay, Gmail, GitHub, Booking.com, Figma, and Notion. Use **Cmd/Ctrl+E** to edit the quicklinks. The bookmark library starts empty. Set `ORBIA_SEED_DEMO=true` to populate an empty library with six English-language example bookmarks, then switch it off to keep an emptied library empty on restart. Upgrades preserve your saved dashboard and bookmarks.
 
 For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PGID` to the owner of that directory, and bind to `127.0.0.1`. The container runs as that user with a read-only root filesystem. Compose persists the database under `/data`. The HTTP healthcheck uses `/healthz`.
 

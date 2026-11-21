@@ -132,19 +132,20 @@ func (s *Store) SaveDashboard(d Dashboard) (Dashboard, error) {
 	return d, e
 }
 func defaultDashboard() Dashboard {
-	groups := []Group{}
-	for i, v := range []struct {
-		name, color string
-		links       []Quicklink
-	}{
-		{"Infra", "#36d8d3", []Quicklink{{"unr", "Unraid", "UNR", "http://tower/"}, {"nxc", "Nextcloud", "NXC", "http://nextcloud.local/"}, {"jlf", "Jellyfin", "JLF", "http://jellyfin.local/"}, {"imm", "Immich", "IMM", "http://immich.local/"}}},
-		{"Automation", "#88d9ae", []Quicklink{{"hom", "Home Assistant", "HOM", "http://homeassistant.local:8123/"}, {"n8n", "n8n", "N8N", "http://n8n.local/"}, {"ppr", "Paperless", "PPR", "http://paperless.local/"}, {"bpd", "BentoPDF", "BPD", "https://bentopdf.com/"}}},
-		{"Media", "#8abcf4", []Quicklink{{"snr", "Sonarr", "SNR", "http://sonarr.local/"}, {"rdr", "Radarr", "RDR", "http://radarr.local/"}, {"wsp", "Whisparr", "WSP", "http://whisparr.local/"}, {"nzb", "NZBGet", "NZB", "http://nzbget.local/"}}},
-		{"Dev", "#bb9ae9", []Quicklink{{"git", "GitHub", "GIT", "https://github.com/"}, {"glb", "GitLab", "GLB", "https://gitlab.com/"}, {"tmo", "Testmo", "TMO", "https://www.testmo.com/"}, {"cnf", "Confluence", "CNF", "https://www.atlassian.com/software/confluence"}}},
-		{"Persönlich", "#e9cf81", []Quicklink{{"mal", "Mail", "MAL", "https://mail.google.com/"}, {"kal", "Kalender", "KAL", "https://calendar.google.com/"}, {"not", "Notizen", "NOT", "https://www.notion.so/"}, {"fin", "Finanzen", "FIN", "https://banking.example.com/"}}},
-		{"Bookmarks", "#ec91b7", []Quicklink{{"new", "News", "NEW", "https://news.ycombinator.com/"}, {"tec", "Tech Blogs", "TEC", "https://lobste.rs/"}, {"tls", "Tools", "TLS", "https://www.privacytools.io/"}, {"prj", "Projekte", "PRJ", "https://github.com/dashboard"}}},
-	} {
-		groups = append(groups, Group{ID: []string{"infra", "automation", "media", "dev", "personal", "bookmarks"}[i], Name: v.name, Color: v.color, Links: v.links})
+	groups := []Group{
+		{ID: "shopping", Name: "Shopping", Color: "#36d8d3", Links: []Quicklink{
+			{"amz", "Amazon", "AMZ", "https://www.amazon.com/"},
+			{"eby", "eBay", "EBY", "https://www.ebay.com/"},
+		}},
+		{ID: "work", Name: "Work", Color: "#88d9ae", Links: []Quicklink{
+			{"gml", "Gmail", "GML", "https://mail.google.com/"},
+			{"git", "GitHub", "GIT", "https://github.com/"},
+			{"fig", "Figma", "FIG", "https://www.figma.com/"},
+			{"not", "Notion", "NOT", "https://www.notion.com/"},
+		}},
+		{ID: "travel", Name: "Travel", Color: "#8abcf4", Links: []Quicklink{
+			{"bkg", "Booking.com", "BKG", "https://www.booking.com/"},
+		}},
 	}
-	return Dashboard{Revision: 1, Pages: []Page{{ID: "home", Name: "Zuhause", Groups: groups}}}
+	return Dashboard{Revision: 1, Pages: []Page{{ID: "home", Name: "Home", Groups: groups}}}
 }

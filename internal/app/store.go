@@ -479,12 +479,12 @@ func (s *Store) SeedBookmarks() error {
 			return nil
 		}
 		for i, v := range []struct{ url, title, desc, tags string }{
-			{"https://go.dev/doc/", "Go documentation", "Die Werkzeuge für schnelle, einfache Software.", "dev,go,docs"},
-			{"https://maxroll.gg/d4", "Diablo IV · Builds & Loot", "Builds, Loot und Guides für die nächste Season.", "games,arpg,diablo"},
-			{"https://www.poewiki.net/", "Path of Exile Wiki", "Mechaniken, Loot und Wissen für Wraeclast.", "games,arpg,poe"},
-			{"https://developer.mozilla.org/", "MDN Web Docs", "Das Nachschlagewerk für das offene Web.", "dev,web,docs"},
-			{"https://www.figma.com/community", "Figma Community", "Ideen und Ressourcen für digitale Interfaces.", "design,inspiration"},
-			{"https://linkding.link/", "Linkding", "Bookmarks behalten. Wissen wiederfinden.", "tools,selfhosted"},
+			{"https://go.dev/doc/", "Go Documentation", "Tutorials, language guides, and tools for building Go applications.", "dev,go,docs"},
+			{"https://maxroll.gg/d4", "Diablo IV · Builds & Loot", "Build guides, loot tips, and advice for the next season.", "games,arpg,diablo"},
+			{"https://www.poewiki.net/", "Path of Exile Wiki", "Game mechanics, loot tables, and lore from Wraeclast.", "games,arpg,poe"},
+			{"https://developer.mozilla.org/", "MDN Web Docs", "Reference docs and tutorials for HTML, CSS, and JavaScript.", "dev,web,docs"},
+			{"https://www.figma.com/community", "Figma Community", "Templates, plugins, and resources shared by other designers.", "design,inspiration"},
+			{"https://linkding.link/", "Linkding", "A self-hosted bookmark manager with browser extensions.", "tools,selfhosted"},
 		} {
 			tags := strings.Split(v.tags, ",")
 			if _, e = saveBookmark(c, 0, BookmarkInput{URL: &v.url, Title: &v.title, Description: &v.desc, Tags: &tags, Added: ptr(time.Now().UTC().Add(-time.Duration(i) * time.Hour).Format(time.RFC3339Nano))}, false); e != nil {
