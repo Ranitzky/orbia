@@ -251,6 +251,26 @@ test("default quicklinks, prefix-only search, target preview and Enter navigatio
   assert.equal(navigated, true);
 });
 
+test("full dashboard codes launch immediately from the keyboard and touch input", async () => {
+  for (const mobile of [false, true]) {
+    const page = await pageFor(mobile ? {
+      viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
+    } : {});
+    const input = page.locator("#quick-input");
+    await context.route("https://github.com/**", route => route.fulfill({ body: "GitHub" }));
+    if (mobile) {
+      await input.tap();
+      await input.fill("gi");
+    } else {
+      await page.keyboard.type("gi");
+    }
+    assert.match(await page.locator("#quick-status").textContent(), /GitHub/);
+    if (mobile) await input.fill("git");
+    else await page.keyboard.press("t");
+    await page.waitForURL("https://github.com/");
+  }
+});
+
 test("keyboard editing persists, duplicate codes rejected, page switching and commands work", async () => {
   const page = await pageFor();
   await page.keyboard.press("Meta+e");

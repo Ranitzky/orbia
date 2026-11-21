@@ -237,6 +237,19 @@ function allLinks() {
 function quickMatches() {
   return allLinks().filter((l) => l.code.startsWith(state.quick));
 }
+function updateQuickInput(value) {
+  state.quick = value.replace(/[^a-z0-9]/gi, "").toUpperCase();
+  if (!state.edit && state.quick.length === 3) {
+    const target = allLinks().find(link => link.code === state.quick);
+    if (target) {
+      state.quick = "";
+      renderQuick();
+      location.assign(target.url);
+      return;
+    }
+  }
+  renderQuick();
+}
 function setPage(id) {
   state.page = id;
   preference("page", id);
@@ -1248,10 +1261,10 @@ $("#confirm-delete").addEventListener("click", async () => {
   }
 });
 $("#quick-input").addEventListener("input", (event) => {
-  state.quick = event.target.value.replace(/[^a-z0-9]/gi, "").toUpperCase();
-  renderQuick();
+  if (!event.isComposing) updateQuickInput(event.target.value);
 });
 $("#quick-input").addEventListener("keydown", (event) => {
+  if (event.isComposing) return;
   if (event.key === "Escape") {
     state.quick = "";
     renderQuick();
@@ -1409,8 +1422,7 @@ document.addEventListener("keydown", (event) => {
   if (/^[a-z0-9]$/i.test(event.key) && !state.edit) {
     event.preventDefault();
     if (state.quick.length < 3) {
-      state.quick += event.key.toUpperCase();
-      renderQuick();
+      updateQuickInput(state.quick + event.key);
     }
   }
 });
