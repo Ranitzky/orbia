@@ -757,7 +757,7 @@ function editGroup(id) {
   const page = activePage(),
     group = page.groups.find((g) => g.id === id);
   if (!group && page.groups.length >= 6) {
-    toast(t("Diese Seite hat bereits sechs Gruppen."));
+    toast(t("Diese Seite hat bereits sechs Gruppen."), true);
     return;
   }
   const colors = [

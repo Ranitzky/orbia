@@ -43,7 +43,7 @@ The English catalog loads from the Orbia server on demand and the browser can ca
 | --- | --- |
 | Launch an app | Type a code prefix on the dashboard. Other links dim. As soon as one code matches, the preview shows the name and destination. Enter opens it, Backspace corrects the prefix and Escape clears it. |
 | Change dashboard | Press 1–9 or choose a page in the command palette. Each page has its own groups and codes. The touch input also accepts codes that begin with a digit. |
-| Edit the dashboard | Cmd/Ctrl+E opens edit mode. Select a link to change its name, code, group or URL. Edit group names, colors and order using their controls. |
+| Edit the dashboard | Cmd/Ctrl+E opens edit mode. Select a link to change its name, code, group or URL. Edit group names, colors and order using their controls. Each page supports up to six groups. |
 | Add a quicklink or bookmark | Press **+** outside a text field to add a quicklink on the dashboard or a bookmark in the library. The header and mobile bar also offer an add button. |
 | Create or switch lists | Cmd/Ctrl+K opens the command palette. Choose a dashboard page, create one or change the theme. Arrow keys select a command and Enter runs it. |
 | Browse bookmarks | Choose **Tags** on desktop or **Bookmarks** on mobile. Switch between cards and rows, edit notes and tags, and open the archive. |
