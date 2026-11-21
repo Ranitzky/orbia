@@ -727,3 +727,41 @@ test("first-run setup, passwordless access and password changes in Settings", as
     await guest.close();
   }
 });
+
+test("dragging quicklinks saves once per move and supports empty groups", async () => {
+  const page = await pageFor();
+  await page.keyboard.press("Meta+e");
+  const booking = page.locator('[data-link="bkg"] .quick-code');
+  const shopping = page.locator('[data-group="shopping"]');
+  const travel = page.locator('[data-group="travel"]');
+  let writes = 0;
+  page.on("request", req => {
+    if (req.method() === "PUT" && req.url().endsWith("/api/orbia/dashboard")) writes++;
+  });
+
+  async function dropOn(target, fraction, save = true) {
+    const start = await booking.boundingBox();
+    const end = await target.boundingBox();
+    const previous = writes;
+    await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(end.x + end.width / 2, end.y + end.height * fraction, { steps: 8 });
+    assert.equal(writes, previous);
+    const saved = save && page.waitForResponse(r => r.request().method() === "PUT" && r.url().endsWith("/api/orbia/dashboard"));
+    await page.mouse.up();
+    if (saved) assert.equal((await saved).status(), 200);
+    assert.equal(writes, previous + Number(save));
+  }
+
+  await dropOn(shopping.locator(".quicklink").first(), 0.25);
+  await shopping.locator('[data-link="bkg"]:first-child').waitFor();
+  await dropOn(shopping.locator('[data-link="eby"]'), 0.75);
+  await shopping.locator('[data-link="bkg"]:last-child').waitFor();
+  await dropOn(shopping.locator(".group-add"), 0.5, false);
+  await page.reload();
+  await shopping.locator('[data-link="bkg"]:last-child').waitFor();
+  await page.keyboard.press("Meta+e");
+  await dropOn(travel.locator(".group-add"), 0.5);
+  await travel.locator('[data-link="bkg"]').waitFor();
+  assert.equal(await page.locator("#editor-dialog").isVisible(), false);
+});

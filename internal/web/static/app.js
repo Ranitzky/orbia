@@ -64,7 +64,7 @@ async function setLanguage(value, persist = false) {
   const select = $("#language");
   select.disabled = true;
   try {
-    english = value === "en" ? (await import("./en.js?v=6")).default : null;
+    english = value === "en" ? (await import("./en.js?v=7")).default : null;
   } catch {
     select.value = document.documentElement.lang;
     toast("Die Sprachdatei konnte nicht geladen werden. / Could not load the language file.", true);
@@ -326,7 +326,7 @@ function renderDashboard() {
     ? page.groups
         .map(
           (g) =>
-            `<section class="group-card" style="--group-color:${escapeHTML(g.color)}" aria-label="${escapeHTML(g.name)}"><div class="group-heading"><h2>${escapeHTML(g.name)}<span>//</span></h2>${state.edit ? `<button class="icon-button" data-edit-group="${escapeHTML(g.id)}" aria-label="${escapeHTML(t("Gruppe {name} bearbeiten", {name: g.name}))}">${icon("settings")}</button>` : ""}</div><div class="quicklinks">${g.links.map((l) => `<a class="quicklink" href="${escapeHTML(l.url)}" data-link="${escapeHTML(l.id)}" ${state.edit ? `aria-label="${escapeHTML(t("{name} bearbeiten", {name: l.name}))}"` : ""}><span class="quick-code">${escapeHTML(l.code)}</span><span class="quick-name">${escapeHTML(l.name)}</span>${icon(state.edit ? "edit" : "arrow")}</a>`).join("")}${!g.links.length && !state.edit ? `<p class="empty-group">${t("Keine Quicklinks.")}</p>` : ""}</div>${state.edit ? `<button class="group-add" data-add-to="${escapeHTML(g.id)}">${t("+ Quicklink hinzufügen")}</button>` : ""}</section>`,
+            `<section class="group-card" data-group="${escapeHTML(g.id)}" style="--group-color:${escapeHTML(g.color)}" aria-label="${escapeHTML(g.name)}"><div class="group-heading"><h2>${escapeHTML(g.name)}<span>//</span></h2>${state.edit ? `<button class="icon-button" data-edit-group="${escapeHTML(g.id)}" aria-label="${escapeHTML(t("Gruppe {name} bearbeiten", {name: g.name}))}">${icon("settings")}</button>` : ""}</div><div class="quicklinks">${g.links.map((l) => `<a class="quicklink" href="${escapeHTML(l.url)}" data-link="${escapeHTML(l.id)}" ${state.edit ? `draggable="false" aria-label="${escapeHTML(t("{name} bearbeiten", {name: l.name}))}"` : ""}><span class="quick-code">${escapeHTML(l.code)}</span><span class="quick-name">${escapeHTML(l.name)}</span>${icon(state.edit ? "edit" : "arrow")}</a>`).join("")}${!g.links.length && !state.edit ? `<p class="empty-group">${t("Keine Quicklinks.")}</p>` : ""}</div>${state.edit ? `<button class="group-add" data-add-to="${escapeHTML(g.id)}">${t("+ Quicklink hinzufügen")}</button>` : ""}</section>`,
         )
         .join("")
     : `<div class="empty-state">${icon("grid")}<p>${t("Hier beginnt deine neue Seite.")}</p><button class="button" data-action="new-group">${t("Erste Gruppe anlegen")}</button></div>`;
@@ -359,6 +359,95 @@ function renderQuick() {
   const chosen = matches.length === 1 ? matches[0] : null;
   el.innerHTML = `<span class="query-display">${escapeHTML(state.quick)}</span><div class="quick-preview">${chosen ? `${escapeHTML(chosen.name)}<span>${escapeHTML(chosen.url)}</span>` : `${matches.length ? t("{count} passende Quicklinks", {count: matches.length}) : t("Kein passendes Kürzel")}<span>${matches.length ? t("Weiter tippen, um die Auswahl einzugrenzen.") : t("Mit Backspace korrigieren oder mit Esc zurücksetzen.")}</span>`}</div>${chosen ? `<kbd>${t("↵ öffnen")}</kbd>` : "<kbd>esc</kbd>"}`;
 }
+// Track movement only for the duration of a drag. Link arrays change once, on drop.
+$("#groups").addEventListener("pointerdown", (start) => {
+  if (!state.edit || state.saving || !start.isPrimary || start.button !== 0) return;
+  const row = start.target.closest(".quicklink");
+  if (!row || (start.pointerType !== "mouse" && !start.target.closest(".quick-code"))) return;
+  const source = row.closest(".group-card");
+  const session = new AbortController();
+  const options = { signal: session.signal };
+  let x = start.clientX, y = start.clientY, dragging = false, frame = 0;
+  let marker, edge;
+
+  function mark(element, position) {
+    if (marker === element && edge === position) return;
+    marker?.removeAttribute("data-drop");
+    marker = element;
+    edge = position;
+    if (marker) marker.dataset.drop = position;
+  }
+  function targetAtPointer() {
+    const hit = document.elementFromPoint(x, y);
+    const group = hit?.closest("#groups .group-card");
+    if (!group) return {};
+    const link = hit.closest(".quicklink");
+    if (!link) {
+      const first = hit.closest(".group-heading") && group.querySelector(".quicklink");
+      return first ? { group, element: first, position: "before" } : { group, element: group, position: "end" };
+    }
+    const rect = link.getBoundingClientRect();
+    return { group, element: link, position: y < rect.top + rect.height / 2 ? "before" : "after" };
+  }
+  function paint() {
+    frame = 0;
+    if (!row.isConnected || state.mode !== "dashboard") return cancel();
+    const target = targetAtPointer();
+    mark(target.element, target.position);
+    const speed = y < 52 ? -12 : y > innerHeight - 52 ? 12 : 0;
+    if (speed) {
+      const previous = scrollY;
+      window.scrollBy(0, speed);
+      if (scrollY !== previous) frame = requestAnimationFrame(paint);
+    }
+  }
+  function cancel() {
+    session.abort();
+    cancelAnimationFrame(frame);
+    mark(null);
+    row.classList.remove("dragging");
+    if (row.hasPointerCapture(start.pointerId)) row.releasePointerCapture(start.pointerId);
+  }
+  row.setPointerCapture(start.pointerId);
+  row.addEventListener("pointermove", event => {
+    if (event.pointerId !== start.pointerId) return;
+    x = event.clientX;
+    y = event.clientY;
+    if (!dragging) {
+      if (Math.hypot(x - start.clientX, y - start.clientY) < 6) return;
+      dragging = true;
+      row.classList.add("dragging");
+    }
+    if (!frame) frame = requestAnimationFrame(paint);
+  }, options);
+  row.addEventListener("lostpointercapture", cancel, options);
+  row.addEventListener("pointercancel", cancel, options);
+  row.addEventListener("pointerup", event => {
+    if (event.pointerId !== start.pointerId) return;
+    x = event.clientX;
+    y = event.clientY;
+    const target = dragging && targetAtPointer();
+    cancel();
+    if (!dragging) return;
+    // A completed pointer gesture can still synthesize an edit click.
+    const swallow = click => { click.preventDefault(); click.stopImmediatePropagation(); };
+    window.addEventListener("click", swallow, { capture: true, once: true });
+    setTimeout(() => window.removeEventListener("click", swallow, true), 0);
+    if (!target.group) return;
+    const before = target.position === "before" ? target.element :
+      target.position === "after" ? target.element.nextElementSibling : null;
+    if (target.group === source && (before === row || before === row.nextElementSibling)) return;
+    changeDashboard(d => {
+      const groups = activePage(d).groups;
+      const from = groups.find(g => g.id === source.dataset.group);
+      const to = groups.find(g => g.id === target.group.dataset.group);
+      const [link] = from.links.splice(from.links.findIndex(l => l.id === row.dataset.link), 1);
+      const index = before ? to.links.findIndex(l => l.id === before.dataset.link) : to.links.length;
+      to.links.splice(index, 0, link);
+    }).catch(error => toast(error.message, true));
+  }, options);
+});
+
 function toggleEdit() {
   state.edit = !state.edit;
   state.quick = "";

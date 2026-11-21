@@ -24,6 +24,7 @@ export default {
   "Befehle (Cmd+K)": "Commands (Cmd+K)",
   "Quickdashboard": "Quick dashboard",
   "Dashboard-Seiten": "Dashboard pages",
+  "Zum Verschieben am Kürzel ziehen": "Drag a code to move its link",
   "Bearbeitungsmodus": "Edit mode",
   "Gruppe hinzufügen": "Add group",
   "Seite bearbeiten": "Edit page",
