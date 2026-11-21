@@ -30,7 +30,7 @@ For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PG
 | `ORBIA_DATA_DIR`, `PUID`, `PGID` | Host bind mount and numeric process identity. |
 | `ORBIA_ORIGIN` | Exact external origin behind a reverse proxy, e.g. `https://orbia.example.com`. Used for origin checks and pagination links. |
 | `ORBIA_SECURE_COOKIE` | Set to `true` when serving over HTTPS. |
-| `ORBIA_DB`, `ORBIA_ADDR` | Native defaults are `./data/orbia.db` and `:8726`. Inside the container, Orbia uses `/data/orbia.db` and `:8080`. |
+| `ORBIA_DB`, `ORBIA_ADDR` | Native defaults are `./data/orbia.db` and `:8726`. Inside the container, Orbia uses `/data/orbia.db` and `:8726`. |
 
 Serve Orbia at the root of its own domain. Preserve the Host header and pass `/api/` token requests through the proxy. Browser sessions expire after 24 hours or on server restart. Use HTTPS when accessing Orbia across a network so that passwords and API tokens are encrypted in transit.
 
