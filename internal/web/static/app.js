@@ -64,7 +64,7 @@ async function setLanguage(value, persist = false) {
   const select = $("#language");
   select.disabled = true;
   try {
-    english = value === "en" ? (await import("./en.js?v=7")).default : null;
+    english = value === "en" ? (await import("./en.js?v=8")).default : null;
   } catch {
     select.value = document.documentElement.lang;
     toast("Die Sprachdatei konnte nicht geladen werden. / Could not load the language file.", true);
@@ -107,6 +107,17 @@ const state = {
   saving: false,
   authenticated: false,
 };
+const linkTargets = {};
+for (const [key, selector] of [["dashboard-target", ".quicklink"], ["bookmark-target", ".bookmark-title, .panel-result"]]) {
+  const select = document.getElementById(key);
+  linkTargets[key] = readPreference(key, "_self") === "_blank" ? "_blank" : "_self";
+  select.value = linkTargets[key];
+  select.addEventListener("change", () => {
+    linkTargets[key] = select.value;
+    preference(key, select.value);
+    for (const link of $$(selector)) link.target = select.value;
+  });
+}
 let toastTimer;
 function toast(message, error = false) {
   const el = $("#toast");
@@ -238,14 +249,17 @@ function allLinks() {
 function quickMatches() {
   return allLinks().filter((l) => l.code.startsWith(state.quick));
 }
+function launchQuicklink(link) {
+  state.quick = "";
+  renderQuick();
+  $(`.quicklink[data-link="${CSS.escape(link.id)}"]`)?.click();
+}
 function updateQuickInput(value) {
   state.quick = value.replace(/[^a-z0-9]/gi, "").toUpperCase();
   if (!state.edit && state.quick.length === 3) {
     const target = allLinks().find(link => link.code === state.quick);
     if (target) {
-      state.quick = "";
-      renderQuick();
-      location.assign(target.url);
+      launchQuicklink(target);
       return;
     }
   }
@@ -327,7 +341,7 @@ function renderDashboard() {
     ? page.groups
         .map(
           (g) =>
-            `<section class="group-card" data-group="${escapeHTML(g.id)}" style="--group-color:${escapeHTML(g.color)}" aria-label="${escapeHTML(g.name)}"><div class="group-heading"><h2>${escapeHTML(g.name)}<span>//</span></h2>${state.edit ? `<button class="icon-button" data-edit-group="${escapeHTML(g.id)}" aria-label="${escapeHTML(t("Gruppe {name} bearbeiten", {name: g.name}))}">${icon("settings")}</button>` : ""}</div><div class="quicklinks">${g.links.map((l) => `<a class="quicklink" href="${escapeHTML(l.url)}" data-link="${escapeHTML(l.id)}" ${state.edit ? `draggable="false" aria-label="${escapeHTML(t("{name} bearbeiten", {name: l.name}))}"` : ""}><span class="quick-code">${escapeHTML(l.code)}</span><span class="quick-name">${escapeHTML(l.name)}</span>${icon(state.edit ? "edit" : "arrow")}</a>`).join("")}${!g.links.length && !state.edit ? `<p class="empty-group">${t("Keine Quicklinks.")}</p>` : ""}</div>${state.edit ? `<button class="group-add" data-add-to="${escapeHTML(g.id)}">${t("+ Quicklink hinzufügen")}</button>` : ""}</section>`,
+            `<section class="group-card" data-group="${escapeHTML(g.id)}" style="--group-color:${escapeHTML(g.color)}" aria-label="${escapeHTML(g.name)}"><div class="group-heading"><h2>${escapeHTML(g.name)}<span>//</span></h2>${state.edit ? `<button class="icon-button" data-edit-group="${escapeHTML(g.id)}" aria-label="${escapeHTML(t("Gruppe {name} bearbeiten", {name: g.name}))}">${icon("settings")}</button>` : ""}</div><div class="quicklinks">${g.links.map((l) => `<a class="quicklink" target="${linkTargets["dashboard-target"]}" rel="noopener" href="${escapeHTML(l.url)}" data-link="${escapeHTML(l.id)}" ${state.edit ? `draggable="false" aria-label="${escapeHTML(t("{name} bearbeiten", {name: l.name}))}"` : ""}><span class="quick-code">${escapeHTML(l.code)}</span><span class="quick-name">${escapeHTML(l.name)}</span>${icon(state.edit ? "edit" : "arrow")}</a>`).join("")}${!g.links.length && !state.edit ? `<p class="empty-group">${t("Keine Quicklinks.")}</p>` : ""}</div>${state.edit ? `<button class="group-add" data-add-to="${escapeHTML(g.id)}">${t("+ Quicklink hinzufügen")}</button>` : ""}</section>`,
         )
         .join("")
     : `<div class="empty-state">${icon("grid")}<p>${t("Hier beginnt deine neue Seite.")}</p><button class="button" data-action="new-group">${t("Erste Gruppe anlegen")}</button></div>`;
@@ -499,7 +513,7 @@ function unreadAttribute(book) {
 }
 function bookCard(b) {
   const domain = host(b.url);
-  return `<article class="bookmark-card"><div class="bookmark-card-top"><span class="domain"><span class="domain-icon" aria-hidden="true">${escapeHTML(domain[0]?.toUpperCase() || "B")}</span>${escapeHTML(domain)}</span><button class="icon-button" data-edit-bookmark="${b.id}" aria-label="${escapeHTML(t("{name} bearbeiten", {name: b.title || domain}))}">${icon("edit")}</button></div><a class="bookmark-title" ${unreadAttribute(b)} href="${escapeHTML(b.url)}">${b.unread ? `<span class="unread-dot" role="img" aria-label="${t("Ungelesen")}" title="${t("Ungelesen")}"></span>` : ""}${escapeHTML(b.title || b.url)}</a><p class="bookmark-description">${escapeHTML(b.description || b.notes)}</p><div class="tags">${b.tag_names
+  return `<article class="bookmark-card"><div class="bookmark-card-top"><span class="domain"><span class="domain-icon" aria-hidden="true">${escapeHTML(domain[0]?.toUpperCase() || "B")}</span>${escapeHTML(domain)}</span><button class="icon-button" data-edit-bookmark="${b.id}" aria-label="${escapeHTML(t("{name} bearbeiten", {name: b.title || domain}))}">${icon("edit")}</button></div><a class="bookmark-title" target="${linkTargets["bookmark-target"]}" rel="noopener" ${unreadAttribute(b)} href="${escapeHTML(b.url)}">${b.unread ? `<span class="unread-dot" role="img" aria-label="${t("Ungelesen")}" title="${t("Ungelesen")}"></span>` : ""}${escapeHTML(b.title || b.url)}</a><p class="bookmark-description">${escapeHTML(b.description || b.notes)}</p><div class="tags">${b.tag_names
     .slice(0, 8)
     .map(
       (t) =>
@@ -641,7 +655,7 @@ async function loadPanel() {
       data.results
         .map(
           (b, i) =>
-            `<a class="panel-result ${i === 0 ? "selected" : ""}" href="${escapeHTML(b.url)}" ${unreadAttribute(b)} data-panel-index="${i}"><span class="domain-icon" aria-hidden="true">${escapeHTML(host(b.url)[0]?.toUpperCase())}</span><span class="result-text"><strong>${escapeHTML(b.title || b.url)}</strong><span class="domain">${escapeHTML(host(b.url))}</span></span><span class="tags">${b.tag_names
+            `<a class="panel-result ${i === 0 ? "selected" : ""}" target="${linkTargets["bookmark-target"]}" rel="noopener" href="${escapeHTML(b.url)}" ${unreadAttribute(b)} data-panel-index="${i}"><span class="domain-icon" aria-hidden="true">${escapeHTML(host(b.url)[0]?.toUpperCase())}</span><span class="result-text"><strong>${escapeHTML(b.title || b.url)}</strong><span class="domain">${escapeHTML(host(b.url))}</span></span><span class="tags">${b.tag_names
               .slice(0, 3)
               .map((t) => `<span class="tag-chip">#${escapeHTML(t)}</span>`)
               .join("")}</span></a>`,
@@ -1405,7 +1419,7 @@ $("#quick-input").addEventListener("keydown", (event) => {
     const matches = quickMatches();
     if (matches.length === 1) {
       event.target.blur();
-      location.assign(matches[0].url);
+      launchQuicklink(matches[0]);
     }
   }
 });
@@ -1537,7 +1551,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && state.quick && !state.edit) {
     event.preventDefault();
     const matches = quickMatches();
-    if (matches.length === 1) location.assign(matches[0].url);
+    if (matches.length === 1) launchQuicklink(matches[0]);
     return;
   }
   if (!state.quick && /^[1-9]$/.test(event.key)) {

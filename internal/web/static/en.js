@@ -1,5 +1,9 @@
 // English UI copy, keyed by the German source message.
 export default {
+  "Dashboard-Links": "Dashboard links",
+  "Bookmark-Links": "Bookmark links",
+  "Im selben Tab": "In the same tab",
+  "In einem neuen Tab": "In a new tab",
   "Orbia. Dein Dashboard und deine Bookmarks an einem Ort.": "Orbia. Your dashboard and bookmarks in one place.",
   "Zum Inhalt": "Skip to content",
   "Melde dich bei deinem Dashboard an.": "Sign in to your dashboard.",

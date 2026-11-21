@@ -36,7 +36,7 @@ Serve Orbia at the root of its own domain. Preserve the Host header and pass `/a
 
 ## Interface language
 
-Settings keeps language and theme controls at the top. Expand a section to manage access, integrations or backups, or to view keyboard shortcuts.
+The first Settings section contains language, theme and separate opening preferences for dashboard links and bookmark links. Both default to the current tab. Each choice is saved in this browser and applies to mouse and keyboard navigation, including dashboard codes and bookmark search results. Expand a section to manage access, integrations or backups, or to view keyboard shortcuts.
 
 Orbia opens in English by default. Choose **Settings → Language → Deutsch** to switch to German. Orbia remembers your choice in this browser and applies it to the sign-in screen, dashboard, library, editors and commands. Saved names, tags, notes and quicklink codes keep their original spelling.
 

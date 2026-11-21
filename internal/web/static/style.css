@@ -1260,6 +1260,14 @@ dialog::backdrop {
 .settings-general label { margin: 0; }
 .settings-general select { width: auto; }
 .settings-general .button { margin-inline-start: auto; }
+.link-target-setting {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
 #settings-dialog details { padding-block: 0; }
 .settings-section summary {
   display: flex;

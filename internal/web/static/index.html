@@ -21,8 +21,8 @@
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="/style.css?v=12" />
-    <script src="/app.js?v=18" type="module"></script>
+    <link rel="stylesheet" href="/style.css?v=13" />
+    <script src="/app.js?v=19" type="module"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Zum Inhalt</a>
@@ -425,6 +425,20 @@
           <svg><use href="#i-sun" /></svg
           ><span id="theme-label">Zum hellen Modus wechseln</span>
         </button>
+        <div class="link-target-setting">
+          <label for="dashboard-target">Dashboard-Links</label>
+          <select id="dashboard-target">
+            <option value="_self">Im selben Tab</option>
+            <option value="_blank">In einem neuen Tab</option>
+          </select>
+        </div>
+        <div class="link-target-setting">
+          <label for="bookmark-target">Bookmark-Links</label>
+          <select id="bookmark-target">
+            <option value="_self">Im selben Tab</option>
+            <option value="_blank">In einem neuen Tab</option>
+          </select>
+        </div>
       </section>
 
       <details name="settings-group" class="settings-section" id="access-settings">
