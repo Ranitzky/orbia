@@ -69,6 +69,7 @@ export default {
   "Linkding-Integrationen": "Linkding integrations",
   "Erstelle für jede App einen eigenen Token. Trage ihn zusammen mit dieser Orbia-Adresse in der App ein.": "Create a token for each app. Enter the token and this Orbia server address in the app.",
   "Name der App": "App name",
+  "z. B. Raycast": "e.g. Raycast",
   "Token erstellen": "Generate token",
   "Neuer Token · jetzt kopieren": "New token · copy it now",
   "Widerrufen": "Revoke",
