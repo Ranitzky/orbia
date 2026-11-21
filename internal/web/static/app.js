@@ -799,7 +799,7 @@ function editGroup(id) {
   ];
   editor(
     group ? t("Gruppe bearbeiten") : t("Neue Gruppe"),
-    inputField("name", "Name", group?.name, 'required maxlength="80"') +
+    inputField("name", "Name", group?.name, 'required maxlength="80" data-1p-ignore') +
       `<div class="form-row"><label for="field-color">${t("Akzentfarbe")}<input id="field-color" name="color" type="color" value="${group?.color || colors[page.groups.length]}" required></label><label for="field-position">Position<select id="field-position" name="position">${Array.from({ length: group ? page.groups.length : page.groups.length + 1 }, (_, i) => `<option value="${i}" ${i === (group ? page.groups.indexOf(group) : page.groups.length) ? "selected" : ""}>${i + 1}</option>`).join("")}</select></label></div>` +
       (group
         ? `<p class="field-hint">${t("Beim Löschen werden auch die {count} Quicklinks dieser Gruppe entfernt.", {count: group.links.length})}</p>`
