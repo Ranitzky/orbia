@@ -198,6 +198,37 @@ test("dashboard and bookmark cards retain their responsive layout", async () => 
   }
 });
 
+test("a full dashboard fits a short desktop viewport", async () => {
+  const page = await pageFor({ viewport: { width: 1440, height: 768 } });
+  const groups = Array.from({ length: 6 }, (_, group) => ({
+    id: `group-${group}`,
+    name: `Group ${group + 1}`,
+    color: "#36d8d3",
+    links: Array.from({ length: 4 }, (_, link) => ({
+      id: `link-${group}-${link}`,
+      code: `L${group}${link}`,
+      name: `Link ${link + 1}`,
+      url: "https://example.com/",
+    })),
+  }));
+  await page.route("**/api/orbia/dashboard", route => route.fulfill({ json: {
+    revision: 1,
+    pages: [{ id: "home", name: "Home", groups }, { id: "work", name: "Work", groups: [] }],
+  } }));
+  await page.reload();
+  await page.locator(".quicklink").last().waitFor();
+  await page.evaluate(() => document.fonts.ready);
+  assert.equal(await page.locator(".quicklink").count(), 24);
+
+  const scrolls = () => page.evaluate(() => {
+    const root = document.scrollingElement;
+    return root.scrollHeight > root.clientHeight;
+  });
+  assert.equal(await scrolls(), false);
+  await page.setViewportSize({ width: 390, height: 768 });
+  assert.equal(await scrolls(), true);
+});
+
 test("quick status reserves space between the grid and the input", async () => {
   const page = await pageFor();
   const grid = page.locator("#groups");
