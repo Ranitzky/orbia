@@ -765,3 +765,40 @@ test("dragging quicklinks saves once per move and supports empty groups", async 
   await travel.locator('[data-link="bkg"]').waitFor();
   assert.equal(await page.locator("#editor-dialog").isVisible(), false);
 });
+
+test("unread filter, indicators and automatic read state in library and search", async () => {
+  const page = await pageFor({}, "en");
+  const client = page.context().request;
+  const url = "https://reading.test/article";
+  const endpoint = origin + "/api/bookmarks/";
+  const headers = { Origin: origin };
+  const created = await client.post(endpoint, { headers, data: {
+    url, title: "Reading fixture", tag_names: ["readingfixture"], unread: true,
+  }});
+  assert.equal(created.status(), 201);
+  const detail = endpoint + (await created.json()).id + "/";
+  await page.route(url, route => route.fulfill({ body: "Article" }));
+  await page.locator("#nav-bookmarks").click();
+  await page.locator("#unread-toggle").click();
+  const title = page.locator('.bookmark-title').filter({hasText: "Reading fixture"});
+  await title.locator(".unread-dot").waitFor();
+  await page.locator("#list-view").click();
+  await title.locator(".unread-dot").waitFor();
+  await page.locator('[data-bookmark-tag="readingfixture"]').first().click();
+  await wait(page, () => document.querySelector("#bookmark-count").textContent === "1 Bookmark");
+  await title.click();
+  await page.waitForURL(url);
+  assert.equal((await (await client.get(detail)).json()).unread, false);
+  await page.goto(origin + "/bookmarks");
+  await page.locator("#unread-toggle").click();
+  await wait(page, () => document.querySelector("#unread-toggle").getAttribute("aria-pressed") === "true");
+  assert.equal(await title.count(), 0);
+  assert.equal(await page.locator('[data-bookmark-tag="readingfixture"]').count(), 0);
+  await client.patch(detail, { headers, data: { unread: true } });
+  await page.keyboard.press("Meta+p");
+  await page.locator("#panel-query").fill("Reading fixture");
+  await page.locator(".panel-result").filter({hasText:"Reading fixture"}).waitFor();
+  await page.keyboard.press("Enter");
+  await page.waitForURL(url);
+  assert.equal((await (await client.get(detail)).json()).unread, false);
+});

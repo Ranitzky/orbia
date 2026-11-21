@@ -94,6 +94,7 @@ const state = {
   quick: "",
   query: "",
   archived: false,
+  unreadOnly: false,
   layout: readPreference("layout", "grid"),
   books: [],
   count: 0,
@@ -493,9 +494,12 @@ function host(url) {
     return url;
   }
 }
+function unreadAttribute(book) {
+  return book.unread ? `data-unread-id="${book.id}"` : "";
+}
 function bookCard(b) {
   const domain = host(b.url);
-  return `<article class="bookmark-card"><div class="bookmark-card-top"><span class="domain"><span class="domain-icon" aria-hidden="true">${escapeHTML(domain[0]?.toUpperCase() || "B")}</span>${escapeHTML(domain)}</span><button class="icon-button" data-edit-bookmark="${b.id}" aria-label="${escapeHTML(t("{name} bearbeiten", {name: b.title || domain}))}">${icon("edit")}</button></div><a class="bookmark-title" href="${escapeHTML(b.url)}">${escapeHTML(b.title || b.url)}</a><p class="bookmark-description">${escapeHTML(b.description || b.notes)}</p><div class="tags">${b.tag_names
+  return `<article class="bookmark-card"><div class="bookmark-card-top"><span class="domain"><span class="domain-icon" aria-hidden="true">${escapeHTML(domain[0]?.toUpperCase() || "B")}</span>${escapeHTML(domain)}</span><button class="icon-button" data-edit-bookmark="${b.id}" aria-label="${escapeHTML(t("{name} bearbeiten", {name: b.title || domain}))}">${icon("edit")}</button></div><a class="bookmark-title" ${unreadAttribute(b)} href="${escapeHTML(b.url)}">${b.unread ? `<span class="unread-dot" role="img" aria-label="${t("Ungelesen")}" title="${t("Ungelesen")}"></span>` : ""}${escapeHTML(b.title || b.url)}</a><p class="bookmark-description">${escapeHTML(b.description || b.notes)}</p><div class="tags">${b.tag_names
     .slice(0, 8)
     .map(
       (t) =>
@@ -515,7 +519,7 @@ function setLayout(value) {
 function renderBookmarks() {
   $("#bookmarks").innerHTML = state.books.length
     ? state.books.map(bookCard).join("")
-    : `<div class="empty-state">${icon("bookmark")}<p>${state.query ? t("Keine Treffer.") : state.archived ? t("Dein Archiv ist leer.") : t("Noch keine Bookmarks.")}</p><p>${state.query ? t("Entferne einen Filter oder versuche einen anderen Suchbegriff.") : t("Speichere deinen ersten Bookmark oder importiere deine Sammlung.")}</p>${!state.query && !state.archived ? `<button class="button" data-action="new-bookmark">${t("Bookmark hinzufügen")}</button>` : ""}</div>`;
+    : `<div class="empty-state">${icon("bookmark")}<p>${state.query || state.unreadOnly ? t("Keine Treffer.") : state.archived ? t("Dein Archiv ist leer.") : t("Noch keine Bookmarks.")}</p><p>${state.query || state.unreadOnly ? t("Entferne einen Filter oder versuche einen anderen Suchbegriff.") : t("Speichere deinen ersten Bookmark oder importiere deine Sammlung.")}</p>${!state.query && !state.archived && !state.unreadOnly ? `<button class="button" data-action="new-bookmark">${t("Bookmark hinzufügen")}</button>` : ""}</div>`;
   $("#bookmark-count").textContent =
     `${state.count.toLocaleString(document.documentElement.lang)} ${state.count === 1 ? "Bookmark" : "Bookmarks"}${state.archived ? " " + t("im Archiv") : ""}`;
   const chosen = selectedTags(state.query),
@@ -533,6 +537,7 @@ function renderBookmarks() {
       ? `<p class="small muted">${t("Noch keine passenden Tags.")}</p>`
       : "");
   $("#load-more").hidden = state.books.length >= state.count;
+  $("#unread-toggle").setAttribute("aria-pressed", String(state.unreadOnly));
   $("#archive-toggle").setAttribute("aria-pressed", String(state.archived));
   setLayout(state.layout);
 }
@@ -545,6 +550,7 @@ async function loadBookmarks(append = false) {
   $("#bookmark-count").textContent = t("Suche …");
   $("#load-more").disabled = true;
   const filters = searchParams(state.query);
+  if (state.unreadOnly) filters.set("unread", "true");
   const params = new URLSearchParams(filters);
   params.set("limit", "36");
   params.set("offset", String(offset));
@@ -635,7 +641,7 @@ async function loadPanel() {
       data.results
         .map(
           (b, i) =>
-            `<a class="panel-result ${i === 0 ? "selected" : ""}" href="${escapeHTML(b.url)}" data-panel-index="${i}"><span class="domain-icon" aria-hidden="true">${escapeHTML(host(b.url)[0]?.toUpperCase())}</span><span class="result-text"><strong>${escapeHTML(b.title || b.url)}</strong><span class="domain">${escapeHTML(host(b.url))}</span></span><span class="tags">${b.tag_names
+            `<a class="panel-result ${i === 0 ? "selected" : ""}" href="${escapeHTML(b.url)}" ${unreadAttribute(b)} data-panel-index="${i}"><span class="domain-icon" aria-hidden="true">${escapeHTML(host(b.url)[0]?.toUpperCase())}</span><span class="result-text"><strong>${escapeHTML(b.title || b.url)}</strong><span class="domain">${escapeHTML(host(b.url))}</span></span><span class="tags">${b.tag_names
               .slice(0, 3)
               .map((t) => `<span class="tag-chip">#${escapeHTML(t)}</span>`)
               .join("")}</span></a>`,
@@ -1228,7 +1234,14 @@ const actions = {
     state.archived = !state.archived;
     loadBookmarks();
   },
-  "clear-filters": () => queryBookmarks(""),
+  "unread-view": () => {
+    state.unreadOnly = !state.unreadOnly;
+    loadBookmarks();
+  },
+  "clear-filters": () => {
+    state.unreadOnly = false;
+    queryBookmarks("");
+  },
   "load-more": () => loadBookmarks(true),
   "more-tags": () => {
     state.tagLimit += 40;
@@ -1237,6 +1250,7 @@ const actions = {
   "all-results": () => {
     state.query = $("#panel-query").value;
     state.archived = false;
+    state.unreadOnly = false;
     setMode("bookmarks");
   },
   "copy-token": async () => {
@@ -1259,6 +1273,33 @@ const actions = {
   },
   logout,
 };
+async function markOpenedBookmark(event) {
+  if (event.defaultPrevented || (event.type === "auxclick" && event.button !== 1)) return;
+  const id = event.target.closest("a[data-unread-id]")?.dataset.unreadId;
+  if (!id) return;
+  try {
+    await api(`/api/bookmarks/${id}/`, {
+      method: "PATCH", body: JSON.stringify({ unread: false }), keepalive: true,
+    });
+    for (const collection of [state.books, state.panelBooks]) {
+      const book = collection.find(b => String(b.id) === id);
+      if (book) book.unread = false;
+    }
+    for (const link of $$("a[data-unread-id]")) {
+      if (link.dataset.unreadId !== id) continue;
+      delete link.dataset.unreadId;
+      link.querySelector(".unread-dot")?.remove();
+    }
+    if (state.mode === "bookmarks" && state.unreadOnly) loadBookmarks();
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+document.addEventListener("click", markOpenedBookmark);
+document.addEventListener("auxclick", markOpenedBookmark);
+window.addEventListener("pageshow", event => {
+  if (event.persisted && state.mode === "bookmarks") loadBookmarks();
+});
 document.addEventListener("click", async (event) => {
   const el = event.target.closest("button, a, [data-close]");
   if (!el) return;
@@ -1448,8 +1489,7 @@ document.addEventListener("keydown", (event) => {
       }
       if (event.key === "Enter") {
         event.preventDefault();
-        const book = state.panelBooks[state.panelSelected];
-        if (book) location.assign(book.url);
+        $$(".panel-result")[state.panelSelected]?.click();
       }
     }
     if (dialog.id === "command-dialog") {

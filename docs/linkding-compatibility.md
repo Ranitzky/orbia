@@ -43,7 +43,8 @@ Raycast's search, create, archive and slashless delete requests are covered by c
 | Media | Favicon, preview, archive URL and legacy website fields are null. No assets or snapshots. |
 | Bundles | 501; `bundle` filter returns 501. Orbia pages are not Linkding bundles. |
 | Auto-tagging | No rules. `auto_tags` is empty. |
-| Sharing | Shared/unread flags are stored for migration; there is no public sharing endpoint. |
+| Read status | The library and tag facets support an Orbia-specific `unread=true` filter. Opening a bookmark in Orbia clears its unread flag. |
+| Sharing | Orbia preserves the shared flag during migration. Public sharing endpoints are unsupported. |
 | Profile preferences | Static compatibility response; UI preferences are browser-local. |
 | URL normalization | Lowercase scheme/host and an explicit root slash; no claim of identical upstream canonicalization for every URL. |
 | Hosting | Root path only. Configure a canonical origin behind a proxy. |

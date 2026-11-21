@@ -760,7 +760,7 @@ main:focus {
   color: var(--accent);
   background: var(--panel-hover);
 }
-#archive-toggle[aria-pressed="true"] {
+:is(#archive-toggle, #unread-toggle)[aria-pressed="true"] {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -884,6 +884,15 @@ main:focus {
   letter-spacing: -0.025em;
   line-height: 1.6;
   overflow-wrap: anywhere;
+}
+.unread-dot {
+  display: inline-block;
+  width: .44em;
+  height: .44em;
+  margin-inline-end: .55em;
+  vertical-align: .14em;
+  border-radius: 50%;
+  background: var(--accent);
 }
 .bookmark-title:hover {
   color: var(--accent);

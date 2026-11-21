@@ -40,6 +40,8 @@ Settings keeps language and theme controls at the top. Expand a section to manag
 
 Orbia opens in English by default. Choose **Settings → Language → Deutsch** to switch to German. Orbia remembers your choice in this browser and applies it to the sign-in screen, dashboard, library, editors and commands. Saved names, tags, notes and quicklink codes keep their original spelling.
 
+Unread bookmarks have a small dot beside their title in grid and list view. Choose **Unread** to filter the library, including search results, tag counts and archived bookmarks. Opening a bookmark from the library or the search panel marks it as read. You can mark it unread again in the bookmark editor.
+
 The English catalog loads from the Orbia server on demand and the browser can cache it. Switching languages updates the current view in place. Search uses the same API, SQLite indexes and debounce settings in both languages.
 
 ## Keyboard and touch

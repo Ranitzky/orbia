@@ -105,6 +105,7 @@ func NewStore(path string) (*Store, error) {
 			`CREATE TABLE IF NOT EXISTS api_tokens(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,digest TEXT UNIQUE)`,
 			`CREATE TABLE IF NOT EXISTS bookmarks(id INTEGER PRIMARY KEY AUTOINCREMENT,url TEXT NOT NULL UNIQUE,title TEXT NOT NULL DEFAULT '',description TEXT NOT NULL DEFAULT '',notes TEXT NOT NULL DEFAULT '',is_archived INTEGER NOT NULL DEFAULT 0,unread INTEGER NOT NULL DEFAULT 0,shared INTEGER NOT NULL DEFAULT 0,date_added TEXT NOT NULL,date_modified TEXT NOT NULL)`,
 			`CREATE INDEX IF NOT EXISTS bookmarks_listing ON bookmarks(is_archived,date_added DESC,id DESC)`,
+			`CREATE INDEX IF NOT EXISTS bookmarks_unread ON bookmarks(is_archived,date_added DESC,id DESC) WHERE unread=1`,
 			`CREATE INDEX IF NOT EXISTS bookmarks_modified ON bookmarks(date_modified)`,
 			`CREATE TABLE IF NOT EXISTS tags(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL UNIQUE,date_added TEXT NOT NULL)`,
 			`CREATE TABLE IF NOT EXISTS bookmark_tags(bookmark_id INTEGER NOT NULL REFERENCES bookmarks(id) ON DELETE CASCADE,tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,PRIMARY KEY(bookmark_id,tag_id))`,
@@ -310,7 +311,7 @@ func (s *Store) Delete(id int64) error {
 
 type Search struct {
 	Query, TagPrefix          string
-	Archived                  bool
+	Archived, UnreadOnly      bool
 	Limit, Offset             int
 	ModifiedSince, AddedSince string
 }
@@ -331,6 +332,9 @@ func searchWhere(p Search) (string, []any, error) {
 	}
 	where := "b.is_archived=?"
 	args := []any{p.Archived}
+	if p.UnreadOnly {
+		where += " AND b.unread=1"
+	}
 	fts := []string{}
 	for _, term := range termsPattern.FindAllString(p.Query, -1) {
 		if strings.EqualFold(term, "and") {
