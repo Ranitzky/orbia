@@ -654,6 +654,7 @@ test("adding a seventh group shows an error toast", async () => {
 test("settings issue and revoke client credentials and import from Linkding", async () => {
   const page = await pageFor({}, "en");
   await page.getByRole("button", {name: "Settings", exact: true}).click();
+  await page.getByText("Linkding integrations", { exact: true }).click();
   await page.getByLabel("App name").fill("Browser test");
   await page.getByRole("button", {name: "Generate token"}).click();
   const value = page.getByLabel("New token · copy it now");
@@ -671,6 +672,7 @@ test("settings issue and revoke client credentials and import from Linkding", as
   await page.getByText("Token revoked.", {exact:true}).waitFor();
   assert.equal((await client.get(origin + "/api/user/profile/", {headers})).status(), 401);
 
+  await page.getByText("Import from Linkding", { exact: true }).click();
   await page.getByLabel("Linkding server", {exact:true}).fill("http://192.168.1.20:9090");
   await page.getByLabel("Linkding API token", {exact:true}).fill("test-token-with-at-least-32-characters");
   await page.getByRole("button", {name:"Start import"}).click();
@@ -697,6 +699,7 @@ test("first-run setup, passwordless access and password changes in Settings", as
     await other.locator("#app").waitFor();
     const settings = page.getByRole("button", {name:"Settings",exact:true});
     await settings.click();
+    await page.getByText("Access", { exact: true }).click();
     await mode.selectOption("password");
     await page.getByLabel("New password").fill("test-owner-password");
     await save.click();

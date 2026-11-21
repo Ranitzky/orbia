@@ -36,6 +36,8 @@ Serve Orbia at the root of its own domain. Preserve the Host header and pass `/a
 
 ## Interface language
 
+Settings keeps language and theme controls at the top. Expand a section to manage access, integrations or backups, or to view keyboard shortcuts.
+
 Orbia opens in English by default. Choose **Settings → Language → Deutsch** to switch to German. Orbia remembers your choice in this browser and applies it to the sign-in screen, dashboard, library, editors and commands. Saved names, tags, notes and quicklink codes keep their original spelling.
 
 The English catalog loads from the Orbia server on demand and the browser can cache it. Switching languages updates the current view in place. Search uses the same API, SQLite indexes and debounce settings in both languages.

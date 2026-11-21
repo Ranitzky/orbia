@@ -21,7 +21,7 @@
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="/style.css?v=9" />
+    <link rel="stylesheet" href="/style.css?v=10" />
     <script src="/app.js?v=13" type="module"></script>
   </head>
   <body>
@@ -414,15 +414,20 @@
           <svg><use href="#i-close" /></svg>
         </button>
       </div>
-      <section class="settings-section">
+      <section class="settings-section settings-general">
         <label for="language">Sprache</label>
         <select id="language">
           <option value="de" lang="de">Deutsch</option>
           <option value="en" lang="en">English</option>
         </select>
+        <button class="button" data-action="theme">
+          <svg><use href="#i-sun" /></svg
+          ><span id="theme-label">Zum hellen Modus wechseln</span>
+        </button>
       </section>
-      <section class="settings-section" id="access-settings">
-        <h3>Zugriff</h3>
+
+      <details name="settings-group" class="settings-section" id="access-settings">
+        <summary>Zugriff</summary>
         <form id="access-form" class="integration-form" method="post">
           <div id="current-password-field" hidden><label for="current-password">Aktuelles Passwort</label>
             <input id="current-password" type="password" autocomplete="current-password" /></div>
@@ -434,16 +439,9 @@
           <button type="submit" class="button">Zugriff speichern</button>
           <p id="access-status" class="small" role="status"></p>
         </form>
-      </section>
-      <section class="settings-section">
-        <h3>Darstellung</h3>
-        <button class="button" data-action="theme">
-          <svg><use href="#i-sun" /></svg
-          ><span id="theme-label">Zum hellen Modus wechseln</span>
-        </button>
-      </section>
-      <section class="settings-section">
-        <h3>Linkding-Integrationen</h3>
+      </details>
+      <details name="settings-group" class="settings-section">
+        <summary>Linkding-Integrationen</summary>
         <p>
           Erstelle für jede App einen eigenen Token. Trage ihn zusammen mit dieser Orbia-Adresse in der App ein.
         </p>
@@ -463,9 +461,9 @@
         </div>
         <div id="token-list"></div>
         <p id="token-status" class="small" role="status"></p>
-      </section>
-      <section class="settings-section">
-        <h3>Aus Linkding importieren</h3>
+      </details>
+      <details name="settings-group" class="settings-section">
+        <summary>Aus Linkding importieren</summary>
         <p>Orbia übernimmt aktive und archivierte Bookmarks. Bei gleicher URL gelten die Daten aus Linkding.</p>
         <form class="integration-form" id="pull-form" method="post">
           <label for="source-url">Linkding-Server</label>
@@ -476,9 +474,9 @@
           <button class="button" type="submit">Import starten</button>
         </form>
         <p id="pull-status" role="status" class="small"></p>
-      </section>
-      <section class="settings-section">
-        <h3>Import & Export</h3>
+      </details>
+      <details name="settings-group" class="settings-section">
+        <summary>Import & Export</summary>
         <p>
           HTML für Linkding und Browser. JSON sichert zusätzlich deine
           Dashboard-Seiten. Beim Import werden URLs zusammengeführt. Ein
@@ -496,9 +494,9 @@
           /></label>
         </div>
         <p id="import-status" class="small" role="status"></p>
-      </section>
-      <section class="settings-section">
-        <h3>Tastatur</h3>
+      </details>
+      <details name="settings-group" class="settings-section">
+        <summary>Tastatur</summary>
         <div class="shortcut-list">
           <span>Kürzel suchen</span><kbd>A–Z</kbd
           ><span>Dashboard-Seite wechseln</span><kbd>1–9</kbd
@@ -508,7 +506,7 @@
           ><span>Befehle öffnen</span><kbd>⌘ / Ctrl K</kbd
           ><span>Schließen / Suche leeren</span><kbd>Esc</kbd>
         </div>
-      </section>
+      </details>
       <button class="text-button danger-text logout" data-action="logout">
         Abmelden
       </button>
