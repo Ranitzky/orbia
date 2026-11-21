@@ -16,7 +16,7 @@ docker compose up -d --build --wait
 docker compose ps
 ```
 
-Open `http://<unraid-host>:8080`. In **Set up Orbia**, choose a password of at least 12 characters or select **Without a password**, then save. The first visitor to save this choice configures the instance. Complete setup on a trusted network before exposing Orbia publicly. Existing installations upgrading from environment-based passwords also complete this step once.
+Open `http://<unraid-host>:8726`. In **Set up Orbia**, choose a password of at least 12 characters or select **Without a password**, then save. The first visitor to save this choice configures the instance. Complete setup on a trusted network before exposing Orbia publicly. Existing installations upgrading from environment-based passwords also complete this step once.
 
 In **Settings → Access**, enter your current password to change or remove it. You can enable password protection again there. Saving the access settings signs out other browser sessions. In passwordless mode, anyone who can reach Orbia can open a session and manage bookmarks, tokens and access settings. Use it only on a trusted network or behind an authenticated proxy.
 
@@ -26,11 +26,11 @@ For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PG
 
 | Setting | Purpose |
 | --- | --- |
-| `ORBIA_PORT`, `ORBIA_BIND` | Published host port and interface. Defaults are 8080 and 0.0.0.0. |
+| `ORBIA_PORT`, `ORBIA_BIND` | Published host port and interface. Defaults are `8726` and `0.0.0.0`. |
 | `ORBIA_DATA_DIR`, `PUID`, `PGID` | Host bind mount and numeric process identity. |
 | `ORBIA_ORIGIN` | Exact external origin behind a reverse proxy, e.g. `https://orbia.example.com`. Used for origin checks and pagination links. |
 | `ORBIA_SECURE_COOKIE` | Set to `true` when serving over HTTPS. |
-| `ORBIA_DB`, `ORBIA_ADDR` | Native process database path and listen address. Compose supplies `/data/orbia.db` and `:8080`. |
+| `ORBIA_DB`, `ORBIA_ADDR` | Native defaults are `./data/orbia.db` and `:8726`. Inside the container, Orbia uses `/data/orbia.db` and `:8080`. |
 
 Serve Orbia at the root of its own domain. Preserve the Host header and pass `/api/` token requests through the proxy. Browser sessions expire after 24 hours or on server restart. Use HTTPS when accessing Orbia across a network so that passwords and API tokens are encrypted in transit.
 

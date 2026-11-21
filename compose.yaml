@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     user: "${PUID:-99}:${PGID:-100}"
     ports:
-      - "${ORBIA_BIND:-0.0.0.0}:${ORBIA_PORT:-8080}:8080"
+      - "${ORBIA_BIND:-0.0.0.0}:${ORBIA_PORT:-8726}:8080"
     environment:
       ORBIA_ADDR: ":8080"
       ORBIA_DB: /data/orbia.db
