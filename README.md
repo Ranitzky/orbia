@@ -6,15 +6,26 @@ Orbia is a self-hosted keyboard launcher and bookmark library for one person. Th
 
 ## Run on Unraid
 
-1. Copy the project to your server and copy `.env.example` to `.env`.
-2. Create `/mnt/user/appdata/orbia` and give the configured UID/GID write access. The example uses Unraid's `99:100`. Use local storage with SQLite locking support.
-3. Start the service from the project directory.
+Copy the project to your server and start it from the directory containing the Dockerfile. The included Compose file uses port 8726 and stores SQLite data in `/mnt/user/appdata/orbia` by default. An `.env` file is optional.
 
 ```sh
-docker compose config --quiet
 docker compose up -d --build --wait
-docker compose ps
 ```
+
+For a minimal standalone Compose file in that same project directory:
+
+```yaml
+services:
+  orbia:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8726:8726"
+    volumes:
+      - /mnt/user/appdata/orbia:/data
+```
+
+Docker creates a missing bind-mount directory. At startup, the entrypoint prepares the dedicated directory and existing Orbia SQLite files for UID 99 and GID 100, then runs the server as that user. This also fixes a root-owned directory from an earlier attempt. SQLite needs write access to the directory for its WAL and shared-memory files. Use a writable local filesystem with SQLite locking support. If you explicitly set Compose `user:` to a non-root user, prepare the host permissions yourself.
 
 Open `http://<unraid-host>:8726`. In **Set up Orbia**, choose a password of at least 12 characters or select **Without a password**, then save. The first visitor to save this choice configures the instance. Complete setup on a trusted network before exposing Orbia publicly. Existing installations upgrading from environment-based passwords also complete this step once.
 
@@ -22,7 +33,7 @@ In **Settings → Access**, enter your current password to change or remove it. 
 
 New databases start with a **Home** dashboard linking to Amazon, eBay, Gmail, GitHub, Booking.com, Figma, and Notion. Use **Cmd/Ctrl+E** to edit the quicklinks. The bookmark library starts empty. Set `ORBIA_SEED_DEMO=true` to populate an empty library with six English-language example bookmarks, then switch it off to keep an emptied library empty on restart. Upgrades preserve your saved dashboard and bookmarks.
 
-For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PGID` to the owner of that directory, and bind to `127.0.0.1`. The container runs as that user with a read-only root filesystem. Compose persists the database under `/data`. The HTTP healthcheck uses `/healthz`.
+For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PGID` to the owner of that directory, and bind to `127.0.0.1`. The server runs as that user. The included Compose file also sets a read-only root filesystem. Compose persists the database under `/data`. The HTTP healthcheck uses `/healthz`.
 
 | Setting | Purpose |
 | --- | --- |

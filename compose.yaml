@@ -2,22 +2,28 @@ services:
   orbia:
     build: .
     restart: unless-stopped
-    user: "${PUID:-99}:${PGID:-100}"
     ports:
       - "${ORBIA_BIND:-0.0.0.0}:${ORBIA_PORT:-8726}:8726"
     environment:
+      PUID: "${PUID:-99}"
+      PGID: "${PGID:-100}"
       ORBIA_ADDR: ":8726"
       ORBIA_DB: /data/orbia.db
       ORBIA_ORIGIN: "${ORBIA_ORIGIN:-}"
       ORBIA_SECURE_COOKIE: "${ORBIA_SECURE_COOKIE:-false}"
       ORBIA_SEED_DEMO: "${ORBIA_SEED_DEMO:-false}"
     volumes:
-      - "${ORBIA_DATA_DIR:-./data}:/data"
+      - "${ORBIA_DATA_DIR:-/mnt/user/appdata/orbia}:/data"
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
     cap_drop:
       - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETUID
+      - SETGID
     security_opt:
       - no-new-privileges:true
     stop_grace_period: 15s

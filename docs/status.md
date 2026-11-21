@@ -9,6 +9,6 @@
 | Scale | SQLite FTS5 and join indexes, paginated results, debounce and cancellation. Search tested with 10,000 bookmarks. | Single-owner design. Imports and exports can hold the database connection. Very large tag vocabularies increase facet response size. |
 | Linkding integrations | Selected REST contract plus search/edit browser URLs verified against upstream documentation and pinned client sources. Browser routes and API flows are regression-tested. | Installed Raycast, Chrome and Firefox extensions still need end-to-end verification. No bundles, automatic tagging rules, scraping, snapshots or public sharing. |
 | Migration | Netscape HTML interchange, JSON export/import, one-way import of active and archived Linkding bookmarks from Settings. Repeat imports are tested. | The import retains local-only URLs, including URLs removed or renamed upstream. No two-way reconciliation. |
-| Deployment | Non-root Compose service, example Unraid configuration, healthcheck, volume persistence after container recreation. | Docker Desktop validation does not reproduce the target server's disk, permissions, network or reverse proxy. |
+| Deployment | Automatic data directory ownership setup, non-root server, example Unraid configuration, healthcheck, volume persistence after container recreation. | Docker Desktop validation does not reproduce the target server's disk, permissions, network or reverse proxy. |
 
 [Architecture](architecture.md) · [Client contracts](compatibility.md) · [Validation results](validation.md)
