@@ -198,7 +198,7 @@ test("dashboard and bookmark cards retain their responsive layout", async () => 
   }
 });
 
-test("a full dashboard fits a short desktop viewport", async () => {
+test("dashboard controls stay at the bottom on full and empty pages", async () => {
   const page = await pageFor({ viewport: { width: 1440, height: 768 } });
   const groups = Array.from({ length: 6 }, (_, group) => ({
     id: `group-${group}`,
@@ -224,7 +224,28 @@ test("a full dashboard fits a short desktop viewport", async () => {
     const root = document.scrollingElement;
     return root.scrollHeight > root.clientHeight;
   });
+  const grid = page.locator("#groups");
+  const gridScrolls = () => grid.evaluate(el => el.scrollHeight > el.clientHeight);
+  const controlsBottom = () => page.locator(".dashboard-bottom").evaluate(el => el.getBoundingClientRect().bottom);
+  const bottom = await controlsBottom();
+  assert.ok(bottom >= 768 - 24 && bottom <= 768);
   assert.equal(await scrolls(), false);
+  assert.equal(await gridScrolls(), false);
+
+  await page.getByRole("tab", { name: /Work/ }).click();
+  await grid.locator(".empty-state").waitFor();
+  assert.equal(await controlsBottom(), bottom);
+  assert.equal(await scrolls(), false);
+
+  await page.getByRole("tab", { name: /Home/ }).click();
+  await grid.locator(".quicklink").last().waitFor();
+  await page.setViewportSize({ width: 1440, height: 550 });
+  assert.equal(await controlsBottom(), bottom - (768 - 550));
+  assert.equal(await scrolls(), false);
+  assert.equal(await gridScrolls(), true);
+  await grid.locator(".quicklink").last().scrollIntoViewIfNeeded();
+  assert.ok(await grid.evaluate(el => el.scrollTop > 0));
+  assert.equal(await controlsBottom(), bottom - (768 - 550));
   await page.setViewportSize({ width: 390, height: 768 });
   assert.equal(await scrolls(), true);
 });

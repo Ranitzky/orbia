@@ -308,6 +308,14 @@ main {
 main:focus {
   outline: none;
 }
+main:has(> #dashboard-view:not([hidden])),
+#dashboard-view {
+  display: flex;
+  flex-direction: column;
+}
+#dashboard-view {
+  flex: 1 1 auto;
+}
 .dashboard-toolbar {
   display: flex;
   justify-content: space-between;
@@ -370,6 +378,8 @@ main:focus {
 }
 .groups-grid {
   display: grid;
+  flex: 1 1 auto;
+  align-content: start;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 30px;
 }
@@ -2242,6 +2252,19 @@ select:hover { border-color: var(--accent); }
     padding-block: 4px;
   }
 }
+@media (min-width: 901px) and (min-height: 420px) {
+  .shell:has(> main > #dashboard-view:not([hidden])) {
+    height: 100svh;
+  }
+  main:has(> #dashboard-view:not([hidden])),
+  #dashboard-view {
+    min-height: 0;
+  }
+  .groups-grid {
+    grid-auto-rows: max-content;
+    overflow-y: auto;
+  }
+}
 @media (max-width: 900px) {
   .header {
     height: 76px;
@@ -2259,10 +2282,6 @@ select:hover { border-color: var(--accent); }
   }
   .dashboard-tools .text-button {
     min-height: 44px;
-  }
-  #dashboard-view {
-    display: flex;
-    flex-direction: column;
   }
   .dashboard-bottom {
     flex-direction: row;
