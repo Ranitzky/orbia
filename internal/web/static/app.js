@@ -30,53 +30,46 @@ const preference = (key, value) => {
     /* Preferences are optional in private browsing. */
   }
 };
-let english = null;
+const defaultLanguage = "en";
+const languageCatalogs = {
+  de: () => import("./de.js?v=1"),
+  en: () => import("./en.js?v=16"),
+};
+let messages = {};
 
-function t(message, values) {
-  const text = english?.[message] ?? message;
+function t(key, values) {
+  const text = messages[key] ?? key;
   if (!values) return text;
   return text.replace(/\{(\w+)\}/g, (_, name) => values[name]);
 }
 
-// Capture only the original shell, before any user-owned content is rendered.
-// Work with individual text nodes so icons, keyboard hints and focus survive a switch.
-const shellCopy = [];
-const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-while (walker.nextNode()) {
-  const node = walker.currentNode;
-  const key = node.data.trim().replace(/\s+/g, " ");
-  if (key) {
-    const original = node.data;
-    shellCopy.push(() => {
-      node.data = english?.[key] ? original.replace(/\S[\s\S]*\S|\S/, () => t(key)) : original;
-    });
+function translateShell() {
+  for (const el of $$("[data-i18n]")) {
+    el.textContent = t(el.dataset.i18n);
   }
-}
-for (const el of $$('[aria-label], [placeholder], meta[name="description"]')) {
   for (const attr of ["aria-label", "placeholder", "content"]) {
-    if (!el.hasAttribute(attr)) continue;
-    const original = el.getAttribute(attr);
-    shellCopy.push(() => el.setAttribute(attr, t(original)));
+    const keyAttr = `data-i18n-${attr}`;
+    for (const el of $$(`[${keyAttr}]`)) {
+      el.setAttribute(attr, t(el.getAttribute(keyAttr)));
+    }
   }
 }
 
-async function setLanguage(value, persist = false) {
+async function setLanguage(lang, persist = false) {
   const select = $("#language");
   select.disabled = true;
   try {
-    english = value === "en" ? (await import("./en.js?v=15")).default : null;
+    messages = (await languageCatalogs[lang]()).default;
   } catch {
     select.value = document.documentElement.lang;
-    toast("Die Sprachdatei konnte nicht geladen werden. / Could not load the language file.", true);
-    return;
+    return false;
   } finally {
     select.disabled = false;
   }
-  const lang = english ? "en" : "de";
   document.documentElement.lang = lang;
   select.value = lang;
+  translateShell();
   renderTokens();
-  for (const update of shellCopy) update();
   if (persist) preference("language", lang);
   theme(document.documentElement.dataset.theme);
   if (state.authenticated) {
@@ -85,6 +78,7 @@ async function setLanguage(value, persist = false) {
   }
   $("#import-status").textContent = "";
   $("#toast").hidden = true;
+  return true;
 }
 const state = {
   dashboard: null,
@@ -133,28 +127,28 @@ function toast(message, error = false) {
   );
 }
 function errorMessage(status, data) {
-  if (status === 401) return t("Bitte melde dich erneut an.");
+  if (status === 401) return t("errors.signInRequired");
   if (status === 409)
-    return t("Die Seite wurde in einem anderen Tab geändert. Deine Ansicht wurde aktualisiert. Bitte erneut speichern.");
+    return t("errors.staleDashboard");
   if (status === 413)
-    return t("Die Datei ist zu groß. Erlaubt sind höchstens 20 MiB.");
-  if (status === 429) return t("Zu viele Versuche. Bitte warte eine Minute.");
-  if (status === 500) return t("Der Server konnte die Anfrage nicht verarbeiten.");
+    return t("errors.payloadTooLarge");
+  if (status === 429) return t("errors.rateLimited");
+  if (status === 500) return t("errors.server");
   const field = Object.keys(data || {})[0];
   return t(
     {
-      url: "Bitte gib eine gültige HTTP- oder HTTPS-Adresse ein. Diese darf noch keinem anderen Bookmark gehören.",
-      code: "Das Kürzel muss aus drei Buchstaben oder Ziffern bestehen und auf dieser Seite eindeutig sein.",
+      url: "errors.invalidUrl",
+      code: "errors.invalidCode",
       tag_names:
-        "Tags dürfen höchstens 64 Zeichen enthalten. Trenne sie mit Kommas oder verwende Hashtags.",
-      title: "Der Titel darf höchstens 512 Zeichen enthalten.",
-      name: "Bitte gib einen gültigen Namen ein.",
-      pages: "Es sind eine bis neun Dashboard-Seiten erlaubt.",
-      groups: "Es sind höchstens sechs Gruppen pro Seite erlaubt.",
-      q: "Diese Suche wird nicht unterstützt. Verwende Text und #tags als UND-Filter.",
-      file: "Die Datei konnte nicht importiert werden. Verwende einen gültigen HTML-Export oder ein Orbia-JSON-Backup.",
+        "errors.invalidTags",
+      title: "errors.invalidTitle",
+      name: "errors.invalidName",
+      pages: "errors.pageLimit",
+      groups: "errors.groupLimit",
+      q: "errors.invalidSearch",
+      file: "errors.invalidImportFile",
     }[field] ||
-    "Die Anfrage konnte nicht verarbeitet werden. Bitte prüfe deine Eingaben."
+    "errors.invalidRequest"
   );
 }
 async function api(path, options = {}) {
@@ -168,7 +162,7 @@ async function api(path, options = {}) {
   } catch (error) {
     if (error.name === "AbortError") throw error;
     throw new Error(
-      t("Der Server ist nicht erreichbar. Bitte prüfe die Verbindung."),
+      t("errors.connection"),
     );
   }
   if (!response.ok) {
@@ -180,13 +174,13 @@ async function api(path, options = {}) {
     }
     let message = errorMessage(response.status, data);
     if (path === pullPath) {
-      if (response.status === 400) message = t("Bitte gib eine HTTP- oder HTTPS-Adresse und den Linkding-Token ein.");
-      if (response.status === 422) message = t("HTTP ist nur für lokale Adressen erlaubt. Verwende für öffentliche Ziele HTTPS.");
-      if (response.status === 409) message = t("Ein Import läuft bereits.");
+      if (response.status === 400) message = t("linkding.invalidCredentials");
+      if (response.status === 422) message = t("linkding.localHttpOnly");
+      if (response.status === 409) message = t("linkding.importAlreadyRunning");
       if (response.status === 502) {
-        message = t("Import unterbrochen. Prüfe Adresse, Zertifikat und Linkding-Token.");
+        message = t("linkding.importInterrupted");
       }
-      if (Number.isInteger(data.changed)) message += " " + t("{changed} geändert, {unchanged} unverändert.", data);
+      if (Number.isInteger(data.changed)) message += " " + t("linkding.importSummary", data);
     }
     const error = new Error(message);
     error.status = response.status;
@@ -209,10 +203,10 @@ function theme(value) {
     value === "dark" ? "#090f12" : "#f2f6f7";
   $("#theme-label").textContent =
     value === "dark"
-      ? t("Zum hellen Modus wechseln")
-      : t("Zum dunklen Modus wechseln");
+      ? t("theme.switchToLight")
+      : t("theme.switchToDark");
 }
-theme(readPreference("theme", "dark"));
+document.documentElement.dataset.theme = readPreference("theme", "dark");
 // Keep the bottom search panel above the on-screen keyboard on mobile browsers.
 if (window.visualViewport) {
   const updateViewport = () => {
@@ -309,7 +303,7 @@ async function loadDashboard() {
     state.page = state.dashboard.pages[0].id;
 }
 async function changeDashboard(change) {
-  if (state.saving) throw new Error(t("Ein Speichervorgang läuft bereits."));
+  if (state.saving) throw new Error(t("errors.saveInProgress"));
   const candidate = structuredClone(state.dashboard);
   change(candidate);
   state.saving = true;
@@ -341,13 +335,13 @@ function renderDashboard() {
     ? page.groups
         .map(
           (g) =>
-            `<section class="group-card" data-group="${escapeHTML(g.id)}" style="--group-color:${escapeHTML(g.color)}" aria-label="${escapeHTML(g.name)}"><div class="group-heading"><h2>${escapeHTML(g.name)}<span>//</span></h2>${state.edit ? `<button class="icon-button" data-edit-group="${escapeHTML(g.id)}" aria-label="${escapeHTML(t("Gruppe {name} bearbeiten", {name: g.name}))}">${icon("settings")}</button>` : ""}</div><div class="quicklinks">${g.links.map((l) => `<a class="quicklink" target="${linkTargets["dashboard-target"]}" rel="noopener" href="${escapeHTML(l.url)}" data-link="${escapeHTML(l.id)}" ${state.edit ? `draggable="false" aria-label="${escapeHTML(t("{name} bearbeiten", {name: l.name}))}"` : ""}><span class="quick-code">${escapeHTML(l.code)}</span><span class="quick-name">${escapeHTML(l.name)}</span>${icon(state.edit ? "edit" : "arrow")}</a>`).join("")}${!g.links.length && !state.edit ? `<p class="empty-group">${t("Keine Quicklinks.")}</p>` : ""}</div>${state.edit ? `<button class="group-add" data-add-to="${escapeHTML(g.id)}">${t("+ Quicklink hinzufügen")}</button>` : ""}</section>`,
+            `<section class="group-card" data-group="${escapeHTML(g.id)}" style="--group-color:${escapeHTML(g.color)}" aria-label="${escapeHTML(g.name)}"><div class="group-heading"><h2>${escapeHTML(g.name)}<span>//</span></h2>${state.edit ? `<button class="icon-button" data-edit-group="${escapeHTML(g.id)}" aria-label="${escapeHTML(t("dashboard.editNamedGroup", {name: g.name}))}">${icon("settings")}</button>` : ""}</div><div class="quicklinks">${g.links.map((l) => `<a class="quicklink" target="${linkTargets["dashboard-target"]}" rel="noopener" href="${escapeHTML(l.url)}" data-link="${escapeHTML(l.id)}" ${state.edit ? `draggable="false" aria-label="${escapeHTML(t("common.editNamedItem", {name: l.name}))}"` : ""}><span class="quick-code">${escapeHTML(l.code)}</span><span class="quick-name">${escapeHTML(l.name)}</span>${icon(state.edit ? "edit" : "arrow")}</a>`).join("")}${!g.links.length && !state.edit ? `<p class="empty-group">${t("dashboard.emptyGroup")}</p>` : ""}</div>${state.edit ? `<button class="group-add" data-add-to="${escapeHTML(g.id)}">${t("dashboard.addQuicklinkToGroup")}</button>` : ""}</section>`,
         )
         .join("")
-    : `<div class="empty-state">${icon("grid")}<p>${t("Hier beginnt deine neue Seite.")}</p><button class="button" data-action="new-group">${t("Erste Gruppe anlegen")}</button></div>`;
+    : `<div class="empty-state">${icon("grid")}<p>${t("dashboard.emptyPage")}</p><button class="button" data-action="new-group">${t("dashboard.addFirstGroup")}</button></div>`;
   $("#edit-bar").hidden = !state.edit;
   $("#edit-toggle").setAttribute("aria-pressed", String(state.edit));
-  $("#edit-toggle span").textContent = state.edit ? t("Fertig") : t("Bearbeiten");
+  $("#edit-toggle span").textContent = state.edit ? t("common.done") : t("common.edit");
   $("#dashboard-toolbar").hidden =
     state.dashboard.pages.length === 1 && !state.edit;
   renderQuick();
@@ -372,7 +366,7 @@ function renderQuick() {
     return;
   }
   const chosen = matches.length === 1 ? matches[0] : null;
-  el.innerHTML = `<span class="query-display">${escapeHTML(state.quick)}</span><div class="quick-preview">${chosen ? `${escapeHTML(chosen.name)}<span>${escapeHTML(chosen.url)}</span>` : `${matches.length ? t("{count} passende Quicklinks", {count: matches.length}) : t("Kein passendes Kürzel")}<span>${matches.length ? t("Weiter tippen, um die Auswahl einzugrenzen.") : t("Mit Backspace korrigieren oder mit Esc zurücksetzen.")}</span>`}</div>${chosen ? `<kbd>${t("↵ öffnen")}</kbd>` : "<kbd>esc</kbd>"}`;
+  el.innerHTML = `<span class="query-display">${escapeHTML(state.quick)}</span><div class="quick-preview">${chosen ? `${escapeHTML(chosen.name)}<span>${escapeHTML(chosen.url)}</span>` : `${matches.length ? t("dashboard.matchingQuicklinks", {count: matches.length}) : t("dashboard.noMatchingCode")}<span>${matches.length ? t("dashboard.narrowCodeSearch") : t("dashboard.clearCodeSearch")}</span>`}</div>${chosen ? `<kbd>${t("dashboard.openQuicklink")}</kbd>` : "<kbd>esc</kbd>"}`;
 }
 // Track movement only for the duration of a drag. Link arrays change once, on drop.
 $("#groups").addEventListener("pointerdown", (start) => {
@@ -513,7 +507,7 @@ function unreadAttribute(book) {
 }
 function bookCard(b) {
   const domain = host(b.url);
-  return `<article class="bookmark-card"><div class="bookmark-card-top"><span class="domain"><span class="domain-icon" aria-hidden="true">${escapeHTML(domain[0]?.toUpperCase() || "B")}</span>${escapeHTML(domain)}</span><button class="icon-button" data-edit-bookmark="${b.id}" aria-label="${escapeHTML(t("{name} bearbeiten", {name: b.title || domain}))}">${icon("edit")}</button></div><a class="bookmark-title" target="${linkTargets["bookmark-target"]}" rel="noopener" ${unreadAttribute(b)} href="${escapeHTML(b.url)}">${b.unread ? `<span class="unread-dot" role="img" aria-label="${t("Ungelesen")}" title="${t("Ungelesen")}"></span>` : ""}${escapeHTML(b.title || b.url)}</a><p class="bookmark-description">${escapeHTML(b.description || b.notes)}</p><div class="tags">${b.tag_names
+  return `<article class="bookmark-card"><div class="bookmark-card-top"><span class="domain"><span class="domain-icon" aria-hidden="true">${escapeHTML(domain[0]?.toUpperCase() || "B")}</span>${escapeHTML(domain)}</span><button class="icon-button" data-edit-bookmark="${b.id}" aria-label="${escapeHTML(t("common.editNamedItem", {name: b.title || domain}))}">${icon("edit")}</button></div><a class="bookmark-title" target="${linkTargets["bookmark-target"]}" rel="noopener" ${unreadAttribute(b)} href="${escapeHTML(b.url)}">${b.unread ? `<span class="unread-dot" role="img" aria-label="${t("bookmarks.unread")}" title="${t("bookmarks.unread")}"></span>` : ""}${escapeHTML(b.title || b.url)}</a><p class="bookmark-description">${escapeHTML(b.description || b.notes)}</p><div class="tags">${b.tag_names
     .slice(0, 8)
     .map(
       (t) =>
@@ -533,9 +527,12 @@ function setLayout(value) {
 function renderBookmarks() {
   $("#bookmarks").innerHTML = state.books.length
     ? state.books.map(bookCard).join("")
-    : `<div class="empty-state">${icon("bookmark")}<p>${state.query || state.unreadOnly ? t("Keine Treffer.") : state.archived ? t("Dein Archiv ist leer.") : t("Noch keine Bookmarks.")}</p><p>${state.query || state.unreadOnly ? t("Entferne einen Filter oder versuche einen anderen Suchbegriff.") : t("Speichere deinen ersten Bookmark oder importiere deine Sammlung.")}</p>${!state.query && !state.archived && !state.unreadOnly ? `<button class="button" data-action="new-bookmark">${t("Bookmark hinzufügen")}</button>` : ""}</div>`;
-  $("#bookmark-count").textContent =
-    `${state.count.toLocaleString(document.documentElement.lang)} ${state.count === 1 ? "Bookmark" : "Bookmarks"}${state.archived ? " " + t("im Archiv") : ""}`;
+    : `<div class="empty-state">${icon("bookmark")}<p>${state.query || state.unreadOnly ? t("bookmarks.noMatches") : state.archived ? t("bookmarks.emptyArchive") : t("bookmarks.emptyLibrary")}</p><p>${state.query || state.unreadOnly ? t("bookmarks.noMatchesHint") : t("bookmarks.emptyLibraryHint")}</p>${!state.query && !state.archived && !state.unreadOnly ? `<button class="button" data-action="new-bookmark">${t("bookmarks.add")}</button>` : ""}</div>`;
+  const count = state.count.toLocaleString(document.documentElement.lang);
+  const countKey = state.archived
+    ? (state.count === 1 ? "bookmarks.archivedCountOne" : "bookmarks.archivedCountOther")
+    : (state.count === 1 ? "bookmarks.countOne" : "bookmarks.countOther");
+  $("#bookmark-count").textContent = t(countKey, { count });
   const chosen = selectedTags(state.query),
     names = new Set(state.tags.map((t) => t.name));
   const tags = [...state.tags];
@@ -545,10 +542,10 @@ function renderBookmarks() {
   $("#bookmark-tags").innerHTML =
     tagMarkup(tags.slice(0, state.tagLimit), state.query) +
     (tags.length > state.tagLimit
-      ? `<button class="text-button" data-action="more-tags">${t("Weitere {count} Tags", {count: Math.min(40, tags.length - state.tagLimit)})}</button>`
+      ? `<button class="text-button" data-action="more-tags">${t("bookmarks.moreTags", {count: Math.min(40, tags.length - state.tagLimit)})}</button>`
       : "") +
     (!tags.length
-      ? `<p class="small muted">${t("Noch keine passenden Tags.")}</p>`
+      ? `<p class="small muted">${t("bookmarks.noTags")}</p>`
       : "");
   $("#load-more").hidden = state.books.length >= state.count;
   $("#unread-toggle").setAttribute("aria-pressed", String(state.unreadOnly));
@@ -561,7 +558,7 @@ async function loadBookmarks(append = false) {
   bookmarkController = new AbortController();
   const sequence = ++bookmarkSequence;
   const offset = append ? state.books.length : 0;
-  $("#bookmark-count").textContent = t("Suche …");
+  $("#bookmark-count").textContent = t("search.loading");
   $("#load-more").disabled = true;
   const filters = searchParams(state.query);
   if (state.unreadOnly) filters.set("unread", "true");
@@ -588,7 +585,7 @@ async function loadBookmarks(append = false) {
     if (error.name !== "AbortError" && sequence === bookmarkSequence) {
       $("#bookmark-count").textContent = error.message;
       $("#bookmarks").innerHTML =
-        `<div class="empty-state">${t("Die Ergebnisse konnten nicht geladen werden.")}</div>`;
+        `<div class="empty-state">${t("search.loadFailed")}</div>`;
     }
   } finally {
     if (sequence === bookmarkSequence) $("#load-more").disabled = false;
@@ -618,7 +615,7 @@ function clearPanelResults() {
   state.panelBooks = [];
   $("#panel-results").replaceChildren();
   $("#panel-tags").replaceChildren();
-  $("#panel-count").textContent = t("Suche …");
+  $("#panel-count").textContent = t("search.loading");
 }
 function openSearch() {
   clearPanelResults();
@@ -635,7 +632,7 @@ async function loadPanel() {
     query = $("#panel-query").value;
   const filters = searchParams(query);
   clearPanelResults();
-  $("#panel-count").textContent = t("Suche …");
+  $("#panel-count").textContent = t("search.loading");
   try {
     const [data, facets] = await Promise.all([
       api(`/api/bookmarks/?${filters}&limit=30`, {
@@ -650,7 +647,7 @@ async function loadPanel() {
     state.panelSelected = 0;
     $("#panel-tags").innerHTML =
       tagMarkup(facets.results, query, true) ||
-      `<span class="small muted">${t("Keine passenden Tags.")}</span>`;
+      `<span class="small muted">${t("search.noTags")}</span>`;
     $("#panel-results").innerHTML =
       data.results
         .map(
@@ -661,9 +658,9 @@ async function loadPanel() {
               .join("")}</span></a>`,
         )
         .join("") ||
-      `<div class="empty-state">${t("Keine passenden Bookmarks.")}</div>`;
+      `<div class="empty-state">${t("search.noBookmarks")}</div>`;
     $("#panel-count").textContent =
-      `${data.count} ${data.count === 1 ? t("Ergebnis") : t("Ergebnisse")}`;
+      t(data.count === 1 ? "search.result" : "search.results", { count: data.count });
   } catch (error) {
     if (error.name !== "AbortError" && sequence === panelSequence) {
       state.panelBooks = [];
@@ -683,43 +680,47 @@ function selectPanel(index) {
     block: "nearest",
   });
   $("#panel-count").textContent =
-    `${state.panelBooks[state.panelSelected].title || state.panelBooks[state.panelSelected].url}, ${t("{position} von {total}", {position: state.panelSelected + 1, total: length})}`;
+    t("search.position", {
+      title: state.panelBooks[state.panelSelected].title || state.panelBooks[state.panelSelected].url,
+      position: state.panelSelected + 1,
+      total: length,
+    });
 }
 
 function availableCommands() {
   return [
     {
-      label: t("Dashboard öffnen"),
+      label: t("commands.openDashboard"),
       icon: "grid",
       key: "1–9",
       run: () => setMode("dashboard"),
     },
     {
-      label: t("Bookmarks öffnen"),
+      label: t("commands.openBookmarks"),
       icon: "bookmark",
       run: () => setMode("bookmarks"),
     },
     {
-      label: t("Bookmarks durchsuchen"),
+      label: t("search.title"),
       icon: "search",
       key: "⌘ P",
       run: openSearch,
     },
     {
-      label: t("Quicklink hinzufügen"),
+      label: t("dashboard.addQuicklink"),
       icon: "plus",
       key: state.mode === "dashboard" ? "+" : "",
       run: () => editLink(),
     },
-    { label: t("Bookmark hinzufügen"), icon: "plus", key: state.mode === "bookmarks" ? "+" : "", run: () => editBookmark() },
+    { label: t("bookmarks.add"), icon: "plus", key: state.mode === "bookmarks" ? "+" : "", run: () => editBookmark() },
     {
-      label: state.edit ? t("Bearbeitungsmodus beenden") : t("Dashboard bearbeiten"),
+      label: state.edit ? t("dashboard.finishEditing") : t("dashboard.edit"),
       icon: "edit",
       key: "⌘ E",
       run: toggleEdit,
     },
     ...state.dashboard.pages.map((p, i) => ({
-      label: t("Seite wechseln · {name}", {name: p.name}),
+      label: t("commands.switchPage", {name: p.name}),
       icon: "grid",
       key: String(i + 1),
       run: () => {
@@ -728,25 +729,25 @@ function availableCommands() {
       },
     })),
     {
-      label: t("Dashboard-Seite hinzufügen"),
+      label: t("dashboard.addDashboardPage"),
       icon: "plus",
       run: () => editPage(true),
     },
     {
-      label: t("Aktuelle Dashboard-Seite bearbeiten"),
+      label: t("commands.editCurrentPage"),
       icon: "edit",
       run: () => editPage(false),
     },
     {
       label:
         document.documentElement.dataset.theme === "dark"
-          ? t("Hellen Modus aktivieren")
-          : t("Dunklen Modus aktivieren"),
+          ? t("commands.enableLightTheme")
+          : t("commands.enableDarkTheme"),
       icon: "sun",
       run: toggleTheme,
     },
     {
-      label: t("Einstellungen, Import & Export"),
+      label: t("commands.openSettings"),
       icon: "settings",
       run: openSettings,
     },
@@ -765,13 +766,13 @@ function renderCommands() {
   );
   state.commandSelected = 0;
   $("#commands").innerHTML =
-    `<p class="command-group">${t("BEFEHLE & SEITEN")}</p>` +
+    `<p class="command-group">${t("commands.groupTitle")}</p>` +
     (state.commands
       .map(
         (c, i) =>
           `<button class="command-item ${i === 0 ? "selected" : ""}" data-command="${i}">${icon(c.icon)}<span>${escapeHTML(c.label)}</span>${c.key ? `<kbd>${c.key}</kbd>` : ""}</button>`,
       )
-      .join("") || `<p class="empty-state">${t("Kein passender Befehl.")}</p>`);
+      .join("") || `<p class="empty-state">${t("commands.noMatches")}</p>`);
 }
 function selectCommand(index) {
   if (!state.commands.length) return;
@@ -822,7 +823,7 @@ async function saveEditor(event) {
   try {
     await editorSave(new FormData($("#editor-form")));
     $("#editor-dialog").close();
-    toast(t("Gespeichert."));
+    toast(t("editor.saved"));
   } catch (error) {
     $("#editor-error").textContent = error.message;
   } finally {
@@ -835,34 +836,34 @@ function editLink(id, groupID) {
   const link = group?.links.find((l) => l.id === id);
   groupID = group?.id || groupID || page.groups[0]?.id;
   if (!page.groups.length) {
-    toast(t("Lege zuerst eine Gruppe an."));
+    toast(t("dashboard.groupRequired"));
     editGroup();
     return;
   }
   const fields =
     inputField(
       "name",
-      "Name",
+      t("editor.name"),
       link?.name,
       'required maxlength="200" autocomplete="off" data-1p-ignore',
     ) +
-    `<div class="form-row">${inputField("code", t("Kürzel"), link?.code, 'required pattern="[A-Za-z0-9]{3}" minlength="3" maxlength="3" placeholder="IMM" autocomplete="off" style="text-transform:uppercase"')}<label for="field-group">${t("Gruppe")}<select name="group" id="field-group">${page.groups.map((g) => `<option value="${escapeHTML(g.id)}" ${g.id === groupID ? "selected" : ""}>${escapeHTML(g.name)}</option>`).join("")}</select></label></div>` +
+    `<div class="form-row">${inputField("code", t("dashboard.code"), link?.code, 'required pattern="[A-Za-z0-9]{3}" minlength="3" maxlength="3" placeholder="IMM" autocomplete="off" style="text-transform:uppercase"')}<label for="field-group">${t("dashboard.group")}<select name="group" id="field-group">${page.groups.map((g) => `<option value="${escapeHTML(g.id)}" ${g.id === groupID ? "selected" : ""}>${escapeHTML(g.name)}</option>`).join("")}</select></label></div>` +
     inputField(
       "url",
-      t("Ziel-URL"),
+      t("dashboard.destinationUrl"),
       link?.url,
       'type="url" required placeholder="https://immich.example.com" autocomplete="url"',
     ) +
-    `<p class="field-hint">${t("Drei Buchstaben oder Ziffern, eindeutig auf dieser Seite.")}</p>`;
+    `<p class="field-hint">${t("dashboard.codeHint")}</p>`;
   editor(
-    link ? t("Quicklink bearbeiten") : t("Neuer Quicklink"),
+    link ? t("dashboard.editQuicklink") : t("dashboard.newQuicklink"),
     fields,
     async (form) => {
       const code = form.get("code").toUpperCase(),
         name = form.get("name").trim();
-      if (!name) throw new Error(t("Bitte gib einen Namen ein."));
+      if (!name) throw new Error(t("editor.nameRequired"));
       if (allLinks().some((l) => l.code === code && l.id !== id))
-        throw new Error(t("Dieses Kürzel ist auf dieser Seite bereits vergeben."));
+        throw new Error(t("dashboard.duplicateCode"));
       await changeDashboard((d) => {
         const groups = activePage(d).groups;
         const target = groups.find((g) => g.id === form.get("group"));
@@ -895,7 +896,7 @@ function editGroup(id) {
   const page = activePage(),
     group = page.groups.find((g) => g.id === id);
   if (!group && page.groups.length >= 6) {
-    toast(t("Diese Seite hat bereits sechs Gruppen."), true);
+    toast(t("dashboard.groupLimit"), true);
     return;
   }
   const colors = [
@@ -907,15 +908,15 @@ function editGroup(id) {
     "#ec91b7",
   ];
   editor(
-    group ? t("Gruppe bearbeiten") : t("Neue Gruppe"),
-    inputField("name", "Name", group?.name, 'required maxlength="80" data-1p-ignore') +
-      `<div class="form-row"><label for="field-color">${t("Akzentfarbe")}<input id="field-color" name="color" type="color" value="${group?.color || colors[page.groups.length]}" required></label><label for="field-position">Position<select id="field-position" name="position">${Array.from({ length: group ? page.groups.length : page.groups.length + 1 }, (_, i) => `<option value="${i}" ${i === (group ? page.groups.indexOf(group) : page.groups.length) ? "selected" : ""}>${i + 1}</option>`).join("")}</select></label></div>` +
+    group ? t("dashboard.editGroup") : t("dashboard.newGroup"),
+    inputField("name", t("editor.name"), group?.name, 'required maxlength="80" data-1p-ignore') +
+      `<div class="form-row"><label for="field-color">${t("dashboard.accentColor")}<input id="field-color" name="color" type="color" value="${group?.color || colors[page.groups.length]}" required></label><label for="field-position">${t("editor.position")}<select id="field-position" name="position">${Array.from({ length: group ? page.groups.length : page.groups.length + 1 }, (_, i) => `<option value="${i}" ${i === (group ? page.groups.indexOf(group) : page.groups.length) ? "selected" : ""}>${i + 1}</option>`).join("")}</select></label></div>` +
       (group
-        ? `<p class="field-hint">${t("Beim Löschen werden auch die {count} Quicklinks dieser Gruppe entfernt.", {count: group.links.length})}</p>`
+        ? `<p class="field-hint">${t("dashboard.deleteGroupWarning", {count: group.links.length})}</p>`
         : ""),
     async (form) => {
       if (!form.get("name").trim())
-        throw new Error(t("Bitte gib einen Namen ein."));
+        throw new Error(t("editor.nameRequired"));
       await changeDashboard((d) => {
         const p = activePage(d),
           old = p.groups.find((g) => g.id === id);
@@ -939,23 +940,23 @@ function editGroup(id) {
 }
 function editPage(create) {
   if (create && state.dashboard.pages.length >= 9) {
-    toast(t("Du kannst höchstens neun Seiten anlegen."));
+    toast(t("dashboard.pageLimit"));
     return;
   }
   const page = activePage(),
     newID = uid();
   editor(
-    create ? t("Dashboard-Seite hinzufügen") : t("Dashboard-Seite bearbeiten"),
+    create ? t("dashboard.addDashboardPage") : t("dashboard.editDashboardPage"),
     inputField(
       "name",
-      "Name",
+      t("editor.name"),
       create ? "" : page.name,
-      `required maxlength="80" placeholder="${t("Zum Beispiel Arbeit")}" data-1p-ignore`,
+      `required maxlength="80" placeholder="${t("dashboard.pageNamePlaceholder")}" data-1p-ignore`,
     ) +
-      `<p class="field-hint">${create ? t("Die neue Seite startet leer. Füge anschließend deine Gruppen und Quicklinks hinzu.") : t("Diese Seite hat eigene Gruppen und Quicklinks. Bookmarks bleiben in der gemeinsamen Sammlung.")}</p>`,
+      `<p class="field-hint">${create ? t("dashboard.newPageHint") : t("dashboard.editPageHint")}</p>`,
     async (form) => {
       const name = form.get("name").trim();
-      if (!name) throw new Error(t("Bitte gib einen Namen ein."));
+      if (!name) throw new Error(t("editor.nameRequired"));
       await changeDashboard((d) => {
         if (create) d.pages.push({ id: newID, name, groups: [] });
         else activePage(d).name = name;
@@ -982,28 +983,28 @@ async function editBookmark(id) {
     return;
   }
   editor(
-    b ? t("Bookmark bearbeiten") : t("Neuer Bookmark"),
+    b ? t("bookmarks.edit") : t("bookmarks.new"),
     inputField(
       "url",
-      "URL",
+      t("bookmarks.url"),
       b?.url,
       'type="url" required autocomplete="url" placeholder="https://"',
     ) +
       inputField(
         "title",
-        t("Titel"),
+        t("bookmarks.title"),
         b?.title,
-        `maxlength="512" placeholder="${t("Ein Name zum Wiederfinden")}" data-1p-ignore`,
+        `maxlength="512" placeholder="${t("bookmarks.titlePlaceholder")}" data-1p-ignore`,
       ) +
-      textareaField("description", t("Beschreibung"), b?.description) +
+      textareaField("description", t("bookmarks.description"), b?.description) +
       inputField(
         "tags",
-        "Tags",
+        t("bookmarks.tags"),
         b?.tag_names.join(", "),
-        `placeholder="${t("Tags mit Kommas trennen oder als Hashtags eingeben.")}" data-1p-ignore`,
+        `placeholder="${t("bookmarks.tagsPlaceholder")}" data-1p-ignore`,
       ) +
-      textareaField("notes", t("Notizen"), b?.notes, 500000) +
-      `<div class="form-row"><label for="field-archived">Status<select aria-label="Status" name="archived" id="field-archived"><option value="false">${t("Gespeichert")}</option><option value="true" ${b?.is_archived ? "selected" : ""}>${t("Archiviert")}</option></select></label><label for="field-unread">${t("Lesestatus")}<select aria-label="${t("Lesestatus")}" name="unread" id="field-unread"><option value="false">${t("Gelesen")}</option><option value="true" ${b?.unread ? "selected" : ""}>${t("Ungelesen")}</option></select></label></div>`,
+      textareaField("notes", t("bookmarks.notes"), b?.notes, 500000) +
+      `<div class="form-row"><label for="field-archived">${t("bookmarks.status")}<select aria-label="${t("bookmarks.status")}" name="archived" id="field-archived"><option value="false">${t("bookmarks.saved")}</option><option value="true" ${b?.is_archived ? "selected" : ""}>${t("bookmarks.archived")}</option></select></label><label for="field-unread">${t("bookmarks.readStatus")}<select aria-label="${t("bookmarks.readStatus")}" name="unread" id="field-unread"><option value="false">${t("bookmarks.read")}</option><option value="true" ${b?.unread ? "selected" : ""}>${t("bookmarks.unread")}</option></select></label></div>`,
     async (form) => {
       const payload = {
         url: form.get("url").trim(),
@@ -1050,15 +1051,15 @@ function renderTokens() {
     name.textContent = entry.name;
     const button = document.createElement("button");
     button.className = "text-button danger-text";
-    button.textContent = t("Widerrufen");
+    button.textContent = t("tokens.revoke");
     button.addEventListener("click", async () => {
-      if (!confirm(t("Token für {name} widerrufen? Die App verliert sofort ihren Zugriff.", {name: entry.name}))) return;
+      if (!confirm(t("tokens.revokeConfirm", {name: entry.name}))) return;
       button.disabled = true;
       try {
         await api(tokensPath + "?id=" + entry.id, {method: "DELETE"});
         clearNewToken();
         await loadTokens();
-        integrationStatus("#token-status", t("Token widerrufen."));
+        integrationStatus("#token-status", t("tokens.revoked"));
       } catch (error) {
         integrationStatus("#token-status", error.message, true);
       } finally {
@@ -1111,12 +1112,12 @@ $("#pull-form").addEventListener("submit", async event => {
   event.preventDefault();
   const button = $("#pull-form button");
   button.disabled = true;
-  integrationStatus("#pull-status", t("Import läuft …"));
+  integrationStatus("#pull-status", t("backup.importing"));
   const body = JSON.stringify({url: $("#source-url").value.trim(), token: $("#source-token").value.trim()});
   $("#source-token").value = "";
   try {
     const result = await api(pullPath, {method: "POST", body});
-    integrationStatus("#pull-status", t("{changed} geändert, {unchanged} unverändert.", result));
+    integrationStatus("#pull-status", t("linkding.importSummary", result));
   } catch (error) {
     integrationStatus("#pull-status", error.message, true);
   } finally {
@@ -1163,14 +1164,14 @@ $("#access-form").addEventListener("submit", async event => {
     if (setup) await start();
     else {
       $('[data-action="logout"]').hidden = mode === "open";
-      integrationStatus("#access-status", t("Zugriff geändert."));
+      integrationStatus("#access-status", t("access.saved"));
     }
   } catch (error) {
     if (error.status === 409 || error.status === 401) {
       await start();
     } else {
       integrationStatus("#access-status", !setup && error.status === 403
-        ? t("Das aktuelle Passwort stimmt nicht.")
+        ? t("access.incorrectPassword")
         : error.message, true);
     }
   } finally {
@@ -1202,12 +1203,12 @@ async function importFile() {
     file = input.files[0];
   if (!file) return;
   if (file.size > 20 * 1024 * 1024) {
-    $("#import-status").textContent = t("Die Datei ist größer als 20 MiB.");
+    $("#import-status").textContent = t("backup.fileTooLarge");
     input.value = "";
     return;
   }
   input.disabled = true;
-  $("#import-status").textContent = t("Import läuft …");
+  $("#import-status").textContent = t("backup.importing");
   try {
     const result = await api("/api/orbia/import", {
       method: "POST",
@@ -1218,7 +1219,7 @@ async function importFile() {
     renderDashboard();
     if (state.mode === "bookmarks") await loadBookmarks();
     $("#import-status").textContent =
-      `${t("{count} Bookmarks importiert.", {count: result.imported})}${result.dashboard_restored ? " " + t("Dashboard-Seiten wiederhergestellt.") : ""}`;
+      `${t("backup.imported", {count: result.imported})}${result.dashboard_restored ? " " + t("backup.dashboardRestored") : ""}`;
   } catch (error) {
     $("#import-status").textContent = error.message;
   } finally {
@@ -1271,18 +1272,18 @@ const actions = {
     const input = $("#token-value");
     try {
       await navigator.clipboard.writeText(input.value);
-      integrationStatus("#token-status", t("Token kopiert."));
+      integrationStatus("#token-status", t("tokens.copied"));
     } catch {
       input.select();
-      integrationStatus("#token-status", t("Der Token ist markiert. Bitte kopiere ihn."));
+      integrationStatus("#token-status", t("tokens.copyManually"));
     }
   },
   "copy-url": async () => {
     try {
       await navigator.clipboard.writeText(location.origin);
-      toast(t("Server-Adresse kopiert."));
+      toast(t("tokens.serverCopied"));
     } catch {
-      toast(t("Bitte kopiere die Adresse aus dem Feld."));
+      toast(t("tokens.copyServerManually"));
     }
   },
   logout,
@@ -1381,7 +1382,7 @@ $("#login-form").addEventListener("submit", async (event) => {
     await start();
   } catch (error) {
     $("#login-error").textContent =
-      error.status === 401 ? t("Das Passwort stimmt nicht.") : error.message;
+      error.status === 401 ? t("auth.incorrectPassword") : error.message;
   } finally {
     button.disabled = false;
   }
@@ -1397,7 +1398,7 @@ $("#confirm-delete").addEventListener("click", async () => {
   try {
     await editorDelete();
     $("#editor-dialog").close();
-    toast(t("Gelöscht."));
+    toast(t("editor.deleted"));
   } catch (error) {
     $("#editor-error").textContent = error.message;
   } finally {
@@ -1606,6 +1607,24 @@ async function start() {
     showLogin();
   }
 }
-$("#language").addEventListener("change", event => setLanguage(event.target.value, true));
-if (readPreference("language", "en") !== "de") await setLanguage("en");
-start();
+$("#language").addEventListener("change", async event => {
+  const status = $("#language-status");
+  status.hidden = true;
+  if (!await setLanguage(event.target.value, true)) {
+    status.textContent = t("errors.languageLoad");
+    status.hidden = false;
+  }
+});
+const savedLanguage = readPreference("language", defaultLanguage);
+const initialLanguage = Object.hasOwn(languageCatalogs, savedLanguage) ? savedLanguage : defaultLanguage;
+if (await setLanguage(initialLanguage)) {
+  start();
+} else if (await setLanguage(initialLanguage === defaultLanguage ? "de" : defaultLanguage)) {
+  toast(t("errors.languageLoad"), true);
+  start();
+} else {
+  const status = $("#toast");
+  status.textContent = "Could not load the language files. / Die Sprachdateien konnten nicht geladen werden.";
+  status.classList.add("error");
+  status.hidden = false;
+}

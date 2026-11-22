@@ -42,7 +42,9 @@ Orbia opens in English by default. Choose **Settings → Language → Deutsch** 
 
 Unread bookmarks have a small dot beside their title in grid and list view. Choose **Unread** to filter the library, including search results, tag counts and archived bookmarks. Opening a bookmark from the library or the search panel marks it as read. You can mark it unread again in the bookmark editor.
 
-The English catalog loads from the Orbia server on demand and the browser can cache it. Switching languages updates the current view in place. Search uses the same API, SQLite indexes and debounce settings in both languages.
+Orbia loads the active language catalog on demand and switches languages in place. Search uses the same API, SQLite indexes and debounce settings in both languages.
+
+The German and English catalogs in `internal/web/static/de.js` and `internal/web/static/en.js` share stable keys such as `settings.title`. Use `data-i18n` for static text, `data-i18n-aria-label`, `data-i18n-placeholder`, or `data-i18n-content` for translated attributes, and `t(key, values)` for text rendered by JavaScript. When adding a message, include the same key and named placeholders in both catalogs. To add a language, create its catalog, register its loader in `app.js`, and add it to the language selector in `index.html`.
 
 ## Keyboard and touch
 

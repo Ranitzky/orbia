@@ -1,21 +1,21 @@
 <!doctype html>
-<html lang="de" data-theme="dark">
+<html lang="en" data-theme="dark">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
   <meta name="theme-color" content="#090f12" />
-  <meta name="description" content="Orbia. Dein Dashboard und deine Bookmarks an einem Ort." />
+  <meta name="description" data-i18n-content="app.description" />
   <title>Orbia</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" href="/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/style.css?v=15" />
-  <script src="/app.js?v=27" type="module"></script>
+  <script src="/app.js?v=28" type="module"></script>
 </head>
 
 <body>
-  <a class="skip-link" href="#main">Zum Inhalt</a>
+  <a class="skip-link" href="#main" data-i18n="navigation.skipToContent"></a>
   <svg class="svg-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <symbol id="i-search" viewBox="0 0 24 24">
@@ -73,63 +73,63 @@
       <div class="brand">
         <span class="brand-mark" aria-hidden="true">[·]</span><span>Orbia</span>
       </div>
-      <p class="login-intro">Melde dich bei deinem Dashboard an.</p>
-      <label for="password">Passwort</label>
+      <p class="login-intro" data-i18n="auth.signInHint"></p>
+      <label for="password" data-i18n="auth.password"></label>
       <input id="password" name="password" type="password" required autocomplete="current-password"
-        placeholder="Dein Orbia-Passwort" />
+        data-i18n-placeholder="auth.passwordPlaceholder" />
       <p id="login-error" class="form-error" role="alert"></p>
-      <button class="button primary" type="submit">Orbia öffnen</button>
+      <button class="button primary" type="submit" data-i18n="auth.signIn"></button>
     </form>
   </section>
 
   <section id="setup-screen" class="login-screen" hidden>
     <div class="login-card" id="setup-container">
-      <h1>Orbia einrichten</h1>
+      <h1 data-i18n="auth.setupTitle"></h1>
     </div>
   </section>
 
   <div id="app" class="shell" hidden>
     <header class="header">
-      <button class="brand brand-button" data-action="dashboard" aria-label="Orbia Dashboard">
+      <button class="brand brand-button" data-action="dashboard" data-i18n-aria-label="navigation.orbiaDashboard">
         <span class="brand-mark" aria-hidden="true">[·]</span><span>Orbia</span>
       </button>
-      <nav class="main-nav" aria-label="Hauptnavigation">
+      <nav class="main-nav" data-i18n-aria-label="navigation.main">
         <button class="nav-item active" id="nav-dashboard" data-action="dashboard"><svg>
             <use href="#i-grid" />
-          </svg><span>Dashboard</span></button>
+          </svg><span data-i18n="navigation.dashboard"></span></button>
         <button class="nav-item" id="nav-bookmarks" data-action="bookmarks"><svg>
             <use href="#i-bookmark" />
-          </svg><span>Bookmarks</span></button>
+          </svg><span data-i18n="navigation.bookmarks"></span></button>
       </nav>
       <div class="header-actions">
-        <button class="nav-item" data-action="search" aria-label="Bookmarks suchen (Cmd+P)"><svg>
+        <button class="nav-item" data-action="search" data-i18n-aria-label="search.shortcut"><svg>
             <use href="#i-search" />
-          </svg><span>Suche</span><kbd>⌘ P</kbd></button>
-        <button class="icon-button" data-action="settings" aria-label="Einstellungen"><svg>
+          </svg><span data-i18n="navigation.search"></span><kbd>⌘ P</kbd></button>
+        <button class="icon-button" data-action="settings" data-i18n-aria-label="settings.title"><svg>
             <use href="#i-settings" />
           </svg></button>
-        <button class="icon-button command-button" data-action="command" aria-label="Befehle (Cmd+K)"><svg>
+        <button class="icon-button command-button" data-action="command" data-i18n-aria-label="commands.shortcut"><svg>
             <use href="#i-command" />
           </svg></button>
       </div>
     </header>
 
     <main id="main" tabindex="-1">
-      <section id="dashboard-view" aria-label="Quickdashboard">
+      <section id="dashboard-view" data-i18n-aria-label="dashboard.quickDashboard">
         <div class="dashboard-toolbar" id="dashboard-toolbar" hidden>
-          <div class="page-tabs" id="page-tabs" role="tablist" aria-label="Dashboard-Seiten"></div>
+          <div class="page-tabs" id="page-tabs" role="tablist" data-i18n-aria-label="dashboard.pageTabs"></div>
         </div>
         <div class="edit-bar" id="edit-bar" hidden>
-          <span>Zum Verschieben am Kürzel ziehen</span>
+          <span data-i18n="dashboard.dragHint"></span>
           <div>
-            <button class="text-button" data-action="new-group">
-              Gruppe hinzufügen</button><button class="text-button" data-action="new-page">
-              Seite hinzufügen</button><button class="button small-button" data-action="new-link">
+            <button class="text-button" data-action="new-group" data-i18n="dashboard.addGroup"></button>
+            <button class="text-button" data-action="new-page" data-i18n="dashboard.addPage"></button>
+            <button class="button small-button" data-action="new-link">
               <svg>
                 <use href="#i-plus" />
-              </svg>Quicklink</button><button class="text-button" data-action="edit-page">
-              Seite bearbeiten
+              </svg><span data-i18n="dashboard.quicklink"></span>
             </button>
+            <button class="text-button" data-action="edit-page" data-i18n="dashboard.editPage"></button>
           </div>
         </div>
         <div id="groups" class="groups-grid"></div>
@@ -137,51 +137,51 @@
         <div class="dashboard-bottom">
           <div class="typing-hint">
             <span class="prompt-symbol">/</span><input id="quick-input" class="quick-input"
-              aria-label="Quicklinks nach Kürzel suchen" placeholder="Kürzel eingeben" maxlength="3" autocomplete="off"
+              data-i18n-aria-label="dashboard.codeSearch" data-i18n-placeholder="dashboard.codePlaceholder" maxlength="3" autocomplete="off"
               autocapitalize="characters" spellcheck="false" /><kbd>↵</kbd>
           </div>
           <div class="dashboard-tools">
             <button class="edit-toggle text-button" id="edit-toggle" data-action="edit" aria-pressed="false"
-              aria-label="Dashboard bearbeiten">
-              <kbd>⌘ E</kbd><span>Bearbeiten</span>
+              data-i18n-aria-label="dashboard.edit">
+              <kbd>⌘ E</kbd><span data-i18n="common.edit"></span>
             </button>
             <button class="text-button" data-action="command">
-              <kbd>⌘ K</kbd>Befehle
+              <kbd>⌘ K</kbd><span data-i18n="commands.title"></span>
             </button>
           </div>
         </div>
       </section>
 
-      <section id="bookmark-view" aria-label="Bookmarks" hidden>
+      <section id="bookmark-view" data-i18n-aria-label="navigation.bookmarks" hidden>
         <div class="bookmark-heading">
           <div>
-            <h1>Bookmarks<span class="accent">.</span></h1>
+            <h1><span data-i18n="navigation.bookmarks"></span><span class="accent">.</span></h1>
           </div>
-          <button class="button primary" data-action="new-bookmark" aria-label="Bookmark hinzufügen">
+          <button class="button primary" data-action="new-bookmark" data-i18n-aria-label="bookmarks.add">
             <svg>
               <use href="#i-plus" />
-            </svg><span>Bookmark hinzufügen</span>
+            </svg><span data-i18n="bookmarks.add"></span>
           </button>
         </div>
         <div class="bookmark-toolbar">
           <div class="search-field">
             <svg>
               <use href="#i-search" />
-            </svg><input id="bookmark-query" aria-label="Bookmarks filtern" type="search"
-              placeholder="Suchen oder #tags kombinieren …" autocomplete="off" spellcheck="false" /><kbd>/</kbd>
+            </svg><input id="bookmark-query" data-i18n-aria-label="bookmarks.filter" type="search"
+              data-i18n-placeholder="bookmarks.searchPlaceholder" autocomplete="off" spellcheck="false" /><kbd>/</kbd>
           </div>
           <button class="button" id="archive-toggle" data-action="archive-view" aria-pressed="false">
             <svg>
               <use href="#i-archive" />
-            </svg><span>Archiv</span>
+            </svg><span data-i18n="bookmarks.archive"></span>
           </button>
-          <button class="button" id="unread-toggle" data-action="unread-view" aria-pressed="false">Ungelesen</button>
-          <div class="view-switch" role="group" aria-label="Bookmark-Ansicht">
-            <button class="icon-button" data-action="grid" id="grid-view" aria-label="Kachelansicht"
+          <button class="button" id="unread-toggle" data-action="unread-view" aria-pressed="false" data-i18n="bookmarks.unread"></button>
+          <div class="view-switch" role="group" data-i18n-aria-label="bookmarks.view">
+            <button class="icon-button" data-action="grid" id="grid-view" data-i18n-aria-label="bookmarks.gridView"
               aria-pressed="true">
               <svg>
                 <use href="#i-grid" />
-              </svg></button><button class="icon-button" data-action="list" id="list-view" aria-label="Listenansicht"
+              </svg></button><button class="icon-button" data-action="list" id="list-view" data-i18n-aria-label="bookmarks.listView"
               aria-pressed="false">
               <svg>
                 <use href="#i-list" />
@@ -190,50 +190,46 @@
           </div>
         </div>
         <div class="bookmark-layout">
-          <aside class="tag-sidebar" aria-label="Tag-Navigation">
+          <aside class="tag-sidebar" data-i18n-aria-label="bookmarks.tagNavigation">
             <div class="sidebar-heading">
-              <span>TAGS</span><button class="text-button" data-action="clear-filters">
-                Zurücksetzen
-              </button>
+              <span data-i18n="bookmarks.tagsHeading"></span>
+              <button class="text-button" data-action="clear-filters" data-i18n="bookmarks.clearFilters"></button>
             </div>
             <div id="bookmark-tags"></div>
           </aside>
           <div class="bookmark-content">
             <div class="results-heading">
-              <span id="bookmark-count" role="status"></span><span class="small muted">Titel · URL · Beschreibung ·
-                Notizen</span>
+              <span id="bookmark-count" role="status"></span><span class="small muted" data-i18n="bookmarks.searchFields"></span>
             </div>
             <div id="bookmarks" class="bookmark-grid"></div>
-            <button id="load-more" class="button load-more" data-action="load-more" hidden>
-              Weitere laden
-            </button>
+            <button id="load-more" class="button load-more" data-action="load-more" hidden data-i18n="bookmarks.loadMore"></button>
           </div>
         </div>
       </section>
     </main>
 
-    <nav class="mobile-nav" aria-label="Schnellaktionen">
+    <nav class="mobile-nav" data-i18n-aria-label="navigation.quickActions">
       <button data-action="dashboard">
         <svg>
           <use href="#i-grid" />
-        </svg><span>Dashboard</span></button><button data-action="bookmarks">
+        </svg><span data-i18n="navigation.dashboard"></span></button><button data-action="bookmarks">
         <svg>
           <use href="#i-bookmark" />
-        </svg><span>Bookmarks</span></button><button data-action="search">
+        </svg><span data-i18n="navigation.bookmarks"></span></button><button data-action="search">
         <svg>
           <use href="#i-search" />
-        </svg><span>Suche</span></button><button data-action="mobile-add">
+        </svg><span data-i18n="navigation.search"></span></button><button data-action="mobile-add">
         <svg>
           <use href="#i-plus" />
-        </svg><span>Hinzufügen</span>
+        </svg><span data-i18n="common.add"></span>
       </button>
     </nav>
   </div>
 
   <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">
     <div class="search-dialog-heading">
-      <h2 id="search-title">Bookmarks durchsuchen</h2>
-      <button class="icon-button" data-close="search-dialog" aria-label="Suche schließen">
+      <h2 id="search-title" data-i18n="search.title"></h2>
+      <button class="icon-button" data-close="search-dialog" data-i18n-aria-label="search.close">
         <svg>
           <use href="#i-close" />
         </svg>
@@ -242,17 +238,15 @@
     <div class="search-field large-search">
       <svg>
         <use href="#i-search" />
-      </svg><input id="panel-query" aria-describedby="panel-count" type="search" aria-label="Bookmarks durchsuchen"
-        placeholder="Suchbegriff oder #tag" autocomplete="off" spellcheck="false" /><kbd>esc</kbd>
+      </svg><input id="panel-query" aria-describedby="panel-count" type="search" data-i18n-aria-label="search.title"
+        data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false" /><kbd>esc</kbd>
     </div>
-    <div id="panel-tags" class="panel-tags" aria-label="Passende Tags"></div>
+    <div id="panel-tags" class="panel-tags" data-i18n-aria-label="search.matchingTags"></div>
     <div id="panel-count" class="sr-only" role="status"></div>
     <div id="panel-results" class="panel-results"></div>
     <div class="panel-footer">
-      <span><kbd>↑</kbd><kbd>↓</kbd> wählen <kbd>↵</kbd> öffnen</span><button class="text-button"
-        data-action="all-results">
-        Alle Ergebnisse ansehen
-      </button>
+      <span><kbd>↑</kbd><kbd>↓</kbd> <span data-i18n="keyboard.select"></span> <kbd>↵</kbd> <span data-i18n="keyboard.open"></span></span>
+      <button class="text-button" data-action="all-results" data-i18n="search.allResults"></button>
     </div>
   </dialog>
 
@@ -260,9 +254,9 @@
     <div class="search-field large-search">
       <svg>
         <use href="#i-command" />
-      </svg><label for="command-query" class="sr-only" id="command-title">Befehle</label><input id="command-query"
-        placeholder="Was möchtest du tun?" autocomplete="off" /><button class="icon-button" data-close="command-dialog"
-        aria-label="Befehle schließen">
+      </svg><label for="command-query" class="sr-only" id="command-title" data-i18n="commands.title"></label><input id="command-query"
+        data-i18n-placeholder="commands.placeholder" autocomplete="off" /><button class="icon-button" data-close="command-dialog"
+        data-i18n-aria-label="commands.close">
         <svg>
           <use href="#i-close" />
         </svg>
@@ -271,7 +265,7 @@
     <div id="commands" class="commands"></div>
     <div id="command-status" class="sr-only" role="status"></div>
     <div class="panel-footer">
-      <span><kbd>↑</kbd><kbd>↓</kbd> wählen <kbd>↵</kbd> ausführen</span><span class="muted small">Orbia</span>
+      <span><kbd>↑</kbd><kbd>↓</kbd> <span data-i18n="keyboard.select"></span> <kbd>↵</kbd> <span data-i18n="keyboard.run"></span></span><span class="muted small">Orbia</span>
     </div>
   </dialog>
 
@@ -279,7 +273,7 @@
     <form id="editor-form">
       <div class="dialog-heading">
         <h2 id="editor-title"></h2>
-        <button type="button" class="icon-button" data-close="editor-dialog" aria-label="Dialog schließen">
+        <button type="button" class="icon-button" data-close="editor-dialog" data-i18n-aria-label="common.closeDialog">
           <svg>
             <use href="#i-close" />
           </svg>
@@ -288,20 +282,14 @@
       <div id="editor-fields" class="editor-fields"></div>
       <p id="editor-error" class="form-error" role="alert"></p>
       <div id="delete-confirm" class="delete-confirm" hidden>
-        Wirklich löschen? Diese Änderung kann nicht rückgängig gemacht
-        werden.<button type="button" class="button danger" id="confirm-delete">
-          Endgültig löschen
-        </button>
+        <span data-i18n="editor.deleteWarning"></span>
+        <button type="button" class="button danger" id="confirm-delete" data-i18n="editor.confirmDelete"></button>
       </div>
       <div class="dialog-actions">
-        <button type="button" class="text-button danger-text" id="delete-button" hidden>
-          Löschen
-        </button>
+        <button type="button" class="text-button danger-text" id="delete-button" hidden data-i18n="common.delete"></button>
         <div>
-          <button type="button" class="button" data-close="editor-dialog">
-            Abbrechen</button><button type="submit" class="button primary" id="save-button">
-            Speichern
-          </button>
+          <button type="button" class="button" data-close="editor-dialog" data-i18n="common.cancel"></button>
+          <button type="submit" class="button primary" id="save-button" data-i18n="common.save"></button>
         </div>
       </div>
     </form>
@@ -309,123 +297,119 @@
 
   <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
     <div class="dialog-heading">
-      <h2 id="settings-title">Einstellungen</h2>
-      <button class="icon-button" data-close="settings-dialog" aria-label="Einstellungen schließen">
+      <h2 id="settings-title" data-i18n="settings.title"></h2>
+      <button class="icon-button" data-close="settings-dialog" data-i18n-aria-label="settings.close">
         <svg>
           <use href="#i-close" />
         </svg>
       </button>
     </div>
     <section class="settings-section settings-general">
-      <label for="language">Sprache</label>
+      <label for="language" data-i18n="settings.language"></label>
       <select id="language">
         <option value="de" lang="de">Deutsch</option>
-        <option value="en" lang="en">English</option>
+        <option value="en" lang="en" selected>English</option>
       </select>
       <button class="button" data-action="theme">
         <svg>
           <use href="#i-sun" />
-        </svg><span id="theme-label">Zum hellen Modus wechseln</span>
+        </svg><span id="theme-label"></span>
       </button>
       <div class="link-target-setting">
-        <label for="dashboard-target">Dashboard-Links</label>
+        <label for="dashboard-target" data-i18n="settings.dashboardLinks"></label>
         <select id="dashboard-target">
-          <option value="_self">Im selben Tab</option>
-          <option value="_blank">In einem neuen Tab</option>
+          <option value="_self" data-i18n="settings.sameTab"></option>
+          <option value="_blank" data-i18n="settings.newTab"></option>
         </select>
       </div>
       <div class="link-target-setting">
-        <label for="bookmark-target">Bookmark-Links</label>
+        <label for="bookmark-target" data-i18n="settings.bookmarkLinks"></label>
         <select id="bookmark-target">
-          <option value="_self">Im selben Tab</option>
-          <option value="_blank">In einem neuen Tab</option>
+          <option value="_self" data-i18n="settings.sameTab"></option>
+          <option value="_blank" data-i18n="settings.newTab"></option>
         </select>
       </div>
+      <p id="language-status" class="small error" role="status" hidden></p>
     </section>
 
     <details name="settings-group" class="settings-section" id="access-settings">
-      <summary>Zugriff</summary>
+      <summary data-i18n="access.title"></summary>
       <form id="access-form" class="integration-form" method="post">
-        <div id="current-password-field" hidden><label for="current-password">Aktuelles Passwort</label>
+        <div id="current-password-field" hidden><label for="current-password" data-i18n="access.currentPassword"></label>
           <input id="current-password" type="password" autocomplete="current-password" />
         </div>
-        <label for="access-mode">Anmeldung</label>
+        <label for="access-mode" data-i18n="access.signInMethod"></label>
         <select id="access-mode">
-          <option value="password">Mit Passwort</option>
-          <option value="open">Ohne Passwort</option>
+          <option value="password" data-i18n="access.requirePassword"></option>
+          <option value="open" data-i18n="access.passwordless"></option>
         </select>
-        <p id="open-access-hint" class="error" hidden>Jeder mit Zugriff auf diese Adresse kann deine Bookmarks,
-          App-Tokens und Einstellungen verwalten.</p>
-        <div id="new-password-field"><label for="new-password">Neues Passwort (mindestens 12 Zeichen)</label>
+        <p id="open-access-hint" class="error" hidden data-i18n="access.passwordlessWarning"></p>
+        <div id="new-password-field"><label for="new-password" data-i18n="access.newPassword"></label>
           <input id="new-password" type="password" minlength="12" autocomplete="new-password" />
         </div>
-        <button type="submit" class="button">Zugriff speichern</button>
+        <button type="submit" class="button" data-i18n="access.save"></button>
         <p id="access-status" class="small" role="status"></p>
       </form>
     </details>
     <details name="settings-group" class="settings-section">
-      <summary>Linkding-Integrationen</summary>
-      <p>
-        Erstelle für jede App einen eigenen Token. Trage ihn zusammen mit dieser Orbia-Adresse in der App ein.
-      </p>
+      <summary data-i18n="tokens.title"></summary>
+      <p data-i18n="tokens.instructions"></p>
       <div class="copy-field">
-        <code id="server-url"></code><button class="text-button" data-action="copy-url">Kopieren</button>
+        <code id="server-url"></code><button class="text-button" data-action="copy-url" data-i18n="common.copy"></button>
       </div>
       <form class="integration-form" id="token-form" method="post">
-        <label for="token-name">Name der App</label>
-        <input id="token-name" required maxlength="80" placeholder="z. B. Raycast" />
-        <button class="button" type="submit">Token erstellen</button>
+        <label for="token-name" data-i18n="tokens.appName"></label>
+        <input id="token-name" required maxlength="80" data-i18n-placeholder="tokens.appPlaceholder" />
+        <button class="button" type="submit" data-i18n="tokens.create"></button>
       </form>
       <div id="new-token" hidden>
-        <label for="token-value">Neuer Token · jetzt kopieren</label>
+        <label for="token-value" data-i18n="tokens.newToken"></label>
         <div class="copy-field"><input id="token-value" readonly autocomplete="off" spellcheck="false" />
-          <button class="text-button" data-action="copy-token">Kopieren</button>
+          <button class="text-button" data-action="copy-token" data-i18n="common.copy"></button>
         </div>
       </div>
       <div id="token-list"></div>
       <p id="token-status" class="small" role="status"></p>
     </details>
     <details name="settings-group" class="settings-section">
-      <summary>Aus Linkding importieren</summary>
-      <p>Orbia übernimmt aktive und archivierte Bookmarks. Bei gleicher URL gelten die Daten aus Linkding.</p>
+      <summary data-i18n="linkding.title"></summary>
+      <p data-i18n="linkding.instructions"></p>
       <form class="integration-form" id="pull-form" method="post">
-        <label for="source-url">Linkding-Server</label>
+        <label for="source-url" data-i18n="linkding.server"></label>
         <input id="source-url" type="url" required aria-describedby="source-hint"
           placeholder="http://192.168.1.20:9090" />
-        <p id="source-hint" class="small muted">HTTP überträgt den Token im lokalen Netz unverschlüsselt. Nutze HTTP nur
-          in einem vertrauenswürdigen Netz. Öffentliche Ziele erfordern HTTPS.</p>
-        <label for="source-token">API-Token von Linkding</label>
+        <p id="source-hint" class="small muted" data-i18n="linkding.httpWarning"></p>
+        <label for="source-token" data-i18n="linkding.apiToken"></label>
         <input id="source-token" type="password" required autocomplete="off" />
-        <button class="button" type="submit">Import starten</button>
+        <button class="button" type="submit" data-i18n="linkding.startImport"></button>
       </form>
       <p id="pull-status" role="status" class="small"></p>
     </details>
     <details name="settings-group" class="settings-section">
-      <summary>Import & Export</summary>
-      <p>
-        HTML für Linkding und Browser. JSON sichert zusätzlich deine
-        Dashboard-Seiten. Beim Import werden URLs zusammengeführt. Ein
-        JSON-Backup ersetzt auch die Dashboard-Seiten.
-      </p>
+      <summary data-i18n="backup.title"></summary>
+      <p data-i18n="backup.instructions"></p>
       <div class="transfer-actions">
-        <a class="button" href="/api/orbia/export?format=html" download>HTML exportieren</a><a class="button"
-          href="/api/orbia/export" download>JSON sichern</a><label class="button file-button" for="import-file">Datei
-          importieren<input id="import-file" type="file" accept=".html,.htm,.json" /></label>
+        <a class="button" href="/api/orbia/export?format=html" download data-i18n="backup.exportHtml"></a>
+        <a class="button" href="/api/orbia/export" download data-i18n="backup.exportJson"></a>
+        <label class="button file-button" for="import-file">
+          <span data-i18n="backup.importFile"></span><input id="import-file" type="file" accept=".html,.htm,.json" />
+        </label>
       </div>
       <p id="import-status" class="small" role="status"></p>
     </details>
     <details name="settings-group" class="settings-section">
-      <summary>Tastatur</summary>
+      <summary data-i18n="keyboard.title"></summary>
       <div class="shortcut-list">
-        <span>Kürzel suchen</span><kbd>A–Z</kbd><span>Dashboard-Seite
-          wechseln</span><kbd>1–9</kbd><span>Bearbeiten</span><kbd>⌘ / Ctrl
-          E</kbd><span>Hinzufügen</span><kbd>+</kbd><span>Bookmarks suchen</span><kbd>⌘ / Ctrl P</kbd><span>Befehle
-          öffnen</span><kbd>⌘ / Ctrl K</kbd><span>Schließen / Suche leeren</span><kbd>Esc</kbd>
+        <span data-i18n="keyboard.findCode"></span><kbd>A–Z</kbd>
+        <span data-i18n="keyboard.switchPage"></span><kbd>1–9</kbd>
+        <span data-i18n="common.edit"></span><kbd>⌘ / Ctrl E</kbd>
+        <span data-i18n="common.add"></span><kbd>+</kbd>
+        <span data-i18n="keyboard.searchBookmarks"></span><kbd>⌘ / Ctrl P</kbd>
+        <span data-i18n="keyboard.openCommands"></span><kbd>⌘ / Ctrl K</kbd>
+        <span data-i18n="keyboard.closeOrClear"></span><kbd>Esc</kbd>
       </div>
     </details>
-    <button class="text-button danger-text logout" data-action="logout">
-      Abmelden
-    </button>
+    <button class="text-button danger-text logout" data-action="logout" data-i18n="auth.signOut"></button>
   </dialog>
   <div id="toast" class="toast" role="status" hidden></div>
 </body>
