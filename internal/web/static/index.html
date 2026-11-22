@@ -10,8 +10,8 @@
   <title>Orbia</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" href="/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/style.css?v=15" />
-  <script src="/app.js?v=28" type="module"></script>
+  <link rel="stylesheet" href="/style.css?v=20" />
+  <script src="/app.js?v=31" type="module"></script>
 </head>
 
 <body>
@@ -94,22 +94,22 @@
         <span class="brand-mark" aria-hidden="true">[·]</span><span>Orbia</span>
       </button>
       <nav class="main-nav" data-i18n-aria-label="navigation.main">
-        <button class="nav-item active" id="nav-dashboard" data-action="dashboard"><svg>
+        <button class="nav-item active" id="nav-dashboard" data-action="dashboard"><svg aria-hidden="true">
             <use href="#i-grid" />
           </svg><span data-i18n="navigation.dashboard"></span></button>
-        <button class="nav-item" id="nav-bookmarks" data-action="bookmarks"><svg>
+        <button class="nav-item" id="nav-bookmarks" data-action="bookmarks"><svg aria-hidden="true">
             <use href="#i-bookmark" />
           </svg><span data-i18n="navigation.bookmarks"></span></button>
       </nav>
       <div class="header-actions">
-        <button class="nav-item" data-action="search" data-i18n-aria-label="search.shortcut"><svg>
+        <button class="nav-item" data-action="search" data-i18n-aria-label="search.title"><svg aria-hidden="true">
             <use href="#i-search" />
-          </svg><span data-i18n="navigation.search"></span><kbd>⌘ P</kbd></button>
+          </svg></button>
+        <button class="nav-item" data-action="command" data-i18n-aria-label="commands.title"><svg aria-hidden="true">
+            <use href="#i-command" />
+          </svg></button>
         <button class="icon-button" data-action="settings" data-i18n-aria-label="settings.title"><svg>
             <use href="#i-settings" />
-          </svg></button>
-        <button class="icon-button command-button" data-action="command" data-i18n-aria-label="commands.shortcut"><svg>
-            <use href="#i-command" />
           </svg></button>
       </div>
     </header>
@@ -134,22 +134,6 @@
         </div>
         <div id="groups" class="groups-grid"></div>
         <div id="quick-status" class="quick-status" role="status"></div>
-        <div class="dashboard-bottom">
-          <div class="typing-hint">
-            <span class="prompt-symbol">/</span><input id="quick-input" class="quick-input"
-              data-i18n-aria-label="dashboard.codeSearch" data-i18n-placeholder="dashboard.codePlaceholder" maxlength="3" autocomplete="off"
-              autocapitalize="characters" spellcheck="false" /><kbd>↵</kbd>
-          </div>
-          <div class="dashboard-tools">
-            <button class="edit-toggle text-button" id="edit-toggle" data-action="edit" aria-pressed="false"
-              data-i18n-aria-label="dashboard.edit">
-              <kbd>⌘ E</kbd><span data-i18n="common.edit"></span>
-            </button>
-            <button class="text-button" data-action="command">
-              <kbd>⌘ K</kbd><span data-i18n="commands.title"></span>
-            </button>
-          </div>
-        </div>
       </section>
 
       <section id="bookmark-view" data-i18n-aria-label="navigation.bookmarks" hidden>

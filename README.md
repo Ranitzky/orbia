@@ -50,15 +50,15 @@ The German and English catalogs in `internal/web/static/de.js` and `internal/web
 
 | Action | How |
 | --- | --- |
-| Launch an app | Type the full three-character code to open its quicklink immediately. After one or two characters, a unique match shows a destination preview and Enter opens it early. Backspace corrects the prefix and Escape clears it. |
-| Change dashboard | Press 1–9 or choose a page in the command palette. Each page has its own groups and codes. The touch input also accepts codes that begin with a digit. |
+| Launch an app | Click or tap a quicklink, or type its three-character code on the dashboard. After one or two characters, a unique match shows a destination preview at the bottom and Enter opens it early. Backspace corrects the prefix and Escape clears it. |
+| Change dashboard | Press 1–9 or choose a page in the command palette. Each page has its own groups and codes. |
 | Edit the dashboard | Cmd/Ctrl+E opens edit mode. Select a link to change its name, code, group or URL. Drag a quicklink by its code to reorder it or move it to another group. Drop on the add-link area to append it, including in an empty group. Edit group names, colors and order using their controls. Each page supports up to six groups. |
 | Add a quicklink or bookmark | Press **+** outside a text field to add a quicklink on the dashboard or a bookmark in the library. The header and mobile bar also offer an add button. Enter bookmark tags as `#travel #city #dresden` or separate them with commas. |
-| Add or switch dashboard pages | In edit mode, select **Add page** next to **Add group**. You can also open the command palette with Cmd/Ctrl+K and choose **Add dashboard page** or switch to an existing page. Arrow keys select a command and Enter runs it. |
+| Add or switch dashboard pages | In edit mode, select **Add page** next to **Add group**. You can also select the **Commands** icon in the header or press Cmd/Ctrl+K, then choose **Add dashboard page** or switch to an existing page. Arrow keys select a command and Enter runs it. |
 | Browse bookmarks | Choose **Tags** on desktop or **Bookmarks** on mobile. Switch between cards and rows, edit notes and tags, and open the archive. |
 | Search from either mode | Cmd/Ctrl+P or **Suche** opens a panel in the lower third on desktop. Type `#travel #city #dresden Guide`. Every tag and text term must match. While typing a final hashtag such as `#dr`, the panel and library suggest matching tag names and show bookmarks with any of those tags. Click a suggestion or type a space after the full tag to apply it as an exact filter. Earlier tags and text constrain both results and suggestions. Use the arrows and Enter, or tap a result. |
 
-The desktop header also accepts the displayed punctuation shortcuts outside text fields. The app reserves unmodified letters for quicklink codes. Theme, dashboard page and bookmark layout persist per browser. Dates are present in API records for interchange. The interface shows no clock or date.
+Punctuation shortcuts work outside text fields. The app reserves unmodified letters for quicklink codes. Theme, dashboard page and bookmark layout persist per browser. Dates are present in API records for interchange. The interface shows no clock or date.
 
 ## Linkding clients and data transfer
 

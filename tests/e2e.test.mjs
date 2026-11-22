@@ -92,11 +92,20 @@ async function command(page, text) {
 test("main navigation highlights only the current view", async () => {
   const page = await pageFor();
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
+  const items = page.locator(".header-actions .nav-item");
+  assert.equal(await items.count(), 2);
+  assert.equal(await items.locator("svg").count(), 2);
+  assert.equal(await items.locator("kbd").count(), 0);
+  assert.ok((await items.allTextContents()).every(text => !text.trim()));
   for (const name of ["Bookmarks", "Dashboard"]) {
-    await nav.getByRole("button", { name, exact: true }).click();
+    const button = nav.getByRole("button", { name, exact: true });
+    assert.equal(await button.locator("span").innerText(), name);
+    await button.click();
     await page.locator(name === "Bookmarks" ? "#bookmark-view" : "#dashboard-view").waitFor();
-    assert.deepEqual((await nav.locator(".active").allTextContents()).map(text => text.trim()), [name]);
-    assert.deepEqual((await nav.locator('[aria-current="page"]').allTextContents()).map(text => text.trim()), [name]);
+    assert.equal(await nav.locator(".active").count(), 1);
+    assert.ok(await button.evaluate(el => el.classList.contains("active")));
+    assert.equal(await nav.locator('[aria-current="page"]').count(), 1);
+    assert.equal(await button.getAttribute("aria-current"), "page");
   }
 });
 
@@ -198,7 +207,7 @@ test("dashboard and bookmark cards retain their responsive layout", async () => 
   }
 });
 
-test("dashboard controls stay at the bottom on full and empty pages", async () => {
+test("dashboard controls stay in the header on full and empty pages", async () => {
   const page = await pageFor({ viewport: { width: 1440, height: 768 } });
   const groups = Array.from({ length: 6 }, (_, group) => ({
     id: `group-${group}`,
@@ -226,48 +235,52 @@ test("dashboard controls stay at the bottom on full and empty pages", async () =
   });
   const grid = page.locator("#groups");
   const gridScrolls = () => grid.evaluate(el => el.scrollHeight > el.clientHeight);
-  const controlsBottom = () => page.locator(".dashboard-bottom").evaluate(el => el.getBoundingClientRect().bottom);
-  const bottom = await controlsBottom();
-  assert.ok(bottom >= 768 - 24 && bottom <= 768);
+  const control = page.locator('.header .nav-item[data-action="command"]');
+  const controlTop = () => control.evaluate(el => el.getBoundingClientRect().top);
+  const top = await controlTop();
+  assert.ok(top >= 0 && top < 76);
+  await control.click();
+  await page.locator("#command-dialog").waitFor();
+  await page.keyboard.press("Escape");
   assert.equal(await scrolls(), false);
   assert.equal(await gridScrolls(), false);
 
   await page.getByRole("tab", { name: /Work/ }).click();
   await grid.locator(".empty-state").waitFor();
-  assert.equal(await controlsBottom(), bottom);
+  assert.equal(await controlTop(), top);
   assert.equal(await scrolls(), false);
 
   await page.getByRole("tab", { name: /Home/ }).click();
   await grid.locator(".quicklink").last().waitFor();
   await page.setViewportSize({ width: 1440, height: 550 });
-  assert.equal(await controlsBottom(), bottom - (768 - 550));
+  assert.equal(await controlTop(), top);
   assert.equal(await scrolls(), false);
   assert.equal(await gridScrolls(), true);
   await grid.locator(".quicklink").last().scrollIntoViewIfNeeded();
   assert.ok(await grid.evaluate(el => el.scrollTop > 0));
-  assert.equal(await controlsBottom(), bottom - (768 - 550));
+  assert.equal(await controlTop(), top);
   await page.setViewportSize({ width: 390, height: 768 });
   assert.equal(await scrolls(), true);
 });
 
-test("quick status reserves space between the grid and the input", async () => {
+test("quick status stays below the grid when typing shortcuts", async () => {
   const page = await pageFor();
   const grid = page.locator("#groups");
   const status = page.locator("#quick-status");
-  const positions = () => page.locator("#groups, .dashboard-bottom, #quick-input").evaluateAll(
+  const positions = () => page.locator("#groups, #quick-status").evaluateAll(
     elements => elements.map(el => el.getBoundingClientRect().top + window.scrollY),
   );
-  for (const width of [1440, 390]) {
+  for (const width of [1440, 820, 641, 390, 320]) {
     await page.setViewportSize({width, height: 844});
-    await page.locator("#quick-input").focus();
     const before = await positions();
     await page.keyboard.type("f");
     assert.deepEqual(await positions(), before);
     const gridBox = await grid.boundingBox();
     const statusBox = await status.boundingBox();
-    const bottomBox = await page.locator(".dashboard-bottom").boundingBox();
     assert.ok(gridBox.y + gridBox.height <= statusBox.y);
-    assert.ok(statusBox.y + statusBox.height <= bottomBox.y);
+    if (width > 900) assert.equal(statusBox.y + statusBox.height, 844 - 16);
+    assert.ok(statusBox.x + statusBox.width <= width);
+    assert.equal(await grid.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.keyboard.type("zz");
     assert.match(await status.textContent(), /Kein passendes Kürzel/);
     assert.deepEqual(await positions(), before);
@@ -303,22 +316,19 @@ test("default quicklinks, prefix-only search, target preview and Enter navigatio
   assert.equal(navigated, true);
 });
 
-test("full dashboard codes launch immediately from the keyboard and touch input", async () => {
+test("quicklinks launch immediately by full keyboard code or touch", async () => {
   for (const mobile of [false, true]) {
     const page = await pageFor(mobile ? {
       viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     } : {});
-    const input = page.locator("#quick-input");
     await context.route("https://github.com/**", route => route.fulfill({ body: "GitHub" }));
     if (mobile) {
-      await input.tap();
-      await input.fill("gi");
+      await page.locator('[data-link="git"]').tap();
     } else {
       await page.keyboard.type("gi");
+      assert.match(await page.locator("#quick-status").textContent(), /GitHub/);
+      await page.keyboard.press("t");
     }
-    assert.match(await page.locator("#quick-status").textContent(), /GitHub/);
-    if (mobile) await input.fill("git");
-    else await page.keyboard.press("t");
     await page.waitForURL("https://github.com/");
   }
 });
@@ -326,10 +336,7 @@ test("full dashboard codes launch immediately from the keyboard and touch input"
 test("keyboard editing persists, duplicate codes rejected, page switching and commands work", async () => {
   const page = await pageFor();
   await page.keyboard.press("Meta+e");
-  assert.equal(
-    await page.locator("#edit-toggle").getAttribute("aria-pressed"),
-    "true",
-  );
+  await page.locator("#edit-bar").waitFor();
   await page
     .getByRole("link", { name: "Amazon bearbeiten", exact: true })
     .click();
@@ -538,9 +545,9 @@ test("iPhone viewport, touch controls, visible focus, escaping and screenshots",
       (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
     );
   assert.equal(columns, 1);
-  await page.locator("#quick-input").fill("FI");
+  await page.keyboard.type("fi");
   assert.match(await page.locator("#quick-status").textContent(), /Figma/);
-  await page.locator("#quick-input").fill("");
+  await page.keyboard.press("Escape");
   await page.locator('.mobile-nav [data-action="search"]').click();
   await page.locator("#panel-query").fill("Travel Guide");
   await wait(

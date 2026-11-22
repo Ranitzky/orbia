@@ -32,8 +32,8 @@ const preference = (key, value) => {
 };
 const defaultLanguage = "en";
 const languageCatalogs = {
-  de: () => import("./de.js?v=1"),
-  en: () => import("./en.js?v=16"),
+  de: () => import("./de.js?v=3"),
+  en: () => import("./en.js?v=18"),
 };
 let messages = {};
 
@@ -340,8 +340,6 @@ function renderDashboard() {
         .join("")
     : `<div class="empty-state">${icon("grid")}<p>${t("dashboard.emptyPage")}</p><button class="button" data-action="new-group">${t("dashboard.addFirstGroup")}</button></div>`;
   $("#edit-bar").hidden = !state.edit;
-  $("#edit-toggle").setAttribute("aria-pressed", String(state.edit));
-  $("#edit-toggle span").textContent = state.edit ? t("common.done") : t("common.edit");
   $("#dashboard-toolbar").hidden =
     state.dashboard.pages.length === 1 && !state.edit;
   renderQuick();
@@ -359,7 +357,6 @@ function renderQuick() {
       !!state.quick && ids.has(link.dataset.link),
     );
   });
-  $("#quick-input").value = state.quick;
   const el = $("#quick-status");
   if (!state.quick) {
     el.replaceChildren();
@@ -1234,7 +1231,6 @@ const actions = {
   search: openSearch,
   command: openCommands,
   settings: openSettings,
-  edit: toggleEdit,
   theme: toggleTheme,
   "new-link": () => editLink(),
   "new-group": () => editGroup(),
@@ -1403,25 +1399,6 @@ $("#confirm-delete").addEventListener("click", async () => {
     $("#editor-error").textContent = error.message;
   } finally {
     button.disabled = false;
-  }
-});
-$("#quick-input").addEventListener("input", (event) => {
-  if (!event.isComposing) updateQuickInput(event.target.value);
-});
-$("#quick-input").addEventListener("keydown", (event) => {
-  if (event.isComposing) return;
-  if (event.key === "Escape") {
-    state.quick = "";
-    renderQuick();
-    event.target.blur();
-  }
-  if (event.key === "Enter" && state.quick) {
-    event.preventDefault();
-    const matches = quickMatches();
-    if (matches.length === 1) {
-      event.target.blur();
-      launchQuicklink(matches[0]);
-    }
   }
 });
 $("#bookmark-query").addEventListener("input", (event) =>
