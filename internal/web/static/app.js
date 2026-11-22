@@ -64,7 +64,7 @@ async function setLanguage(value, persist = false) {
   const select = $("#language");
   select.disabled = true;
   try {
-    english = value === "en" ? (await import("./en.js?v=11")).default : null;
+    english = value === "en" ? (await import("./en.js?v=15")).default : null;
   } catch {
     select.value = document.documentElement.lang;
     toast("Die Sprachdatei konnte nicht geladen werden. / Could not load the language file.", true);
@@ -146,7 +146,7 @@ function errorMessage(status, data) {
       url: "Bitte gib eine gültige HTTP- oder HTTPS-Adresse ein. Diese darf noch keinem anderen Bookmark gehören.",
       code: "Das Kürzel muss aus drei Buchstaben oder Ziffern bestehen und auf dieser Seite eindeutig sein.",
       tag_names:
-        "Tags dürfen höchstens 64 Zeichen enthalten. Trenne sie mit Kommas.",
+        "Tags dürfen höchstens 64 Zeichen enthalten. Trenne sie mit Kommas oder verwende Hashtags.",
       title: "Der Titel darf höchstens 512 Zeichen enthalten.",
       name: "Bitte gib einen gültigen Namen ein.",
       pages: "Es sind eine bis neun Dashboard-Seiten erlaubt.",
@@ -1000,9 +1000,8 @@ async function editBookmark(id) {
         "tags",
         "Tags",
         b?.tag_names.join(", "),
-        'placeholder="games, arpg, diablo"',
+        `placeholder="${t("Tags mit Kommas trennen oder als Hashtags eingeben.")}" data-1p-ignore`,
       ) +
-      `<p class="field-hint">${t("Mehrere Tags mit Kommas trennen.")}</p>` +
       textareaField("notes", t("Notizen"), b?.notes, 500000) +
       `<div class="form-row"><label for="field-archived">Status<select aria-label="Status" name="archived" id="field-archived"><option value="false">${t("Gespeichert")}</option><option value="true" ${b?.is_archived ? "selected" : ""}>${t("Archiviert")}</option></select></label><label for="field-unread">${t("Lesestatus")}<select aria-label="${t("Lesestatus")}" name="unread" id="field-unread"><option value="false">${t("Gelesen")}</option><option value="true" ${b?.unread ? "selected" : ""}>${t("Ungelesen")}</option></select></label></div>`,
     async (form) => {
@@ -1013,7 +1012,7 @@ async function editBookmark(id) {
         notes: form.get("notes"),
         tag_names: form
           .get("tags")
-          .split(",")
+          .split(/,|\s+(?=#)/)
           .map((t) => t.trim())
           .filter(Boolean),
         is_archived: form.get("archived") === "true",

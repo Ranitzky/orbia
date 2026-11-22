@@ -493,8 +493,8 @@ func (s *Store) SeedBookmarks() error {
 		}
 		for i, v := range []struct{ url, title, desc, tags string }{
 			{"https://go.dev/doc/", "Go Documentation", "Tutorials, language guides, and tools for building Go applications.", "dev,go,docs"},
-			{"https://maxroll.gg/d4", "Diablo IV · Builds & Loot", "Build guides, loot tips, and advice for the next season.", "games,arpg,diablo"},
-			{"https://www.poewiki.net/", "Path of Exile Wiki", "Game mechanics, loot tables, and lore from Wraeclast.", "games,arpg,poe"},
+			{"https://www.dresden.de/", "Dresden Travel Guide", "Visitor information, sights, and cultural attractions in Dresden.", "travel,city,dresden"},
+			{"https://english.leipzig.de/", "Leipzig Travel Guide", "Visitor information, public transport, and attractions in Leipzig.", "travel,city,leipzig"},
 			{"https://developer.mozilla.org/", "MDN Web Docs", "Reference docs and tutorials for HTML, CSS, and JavaScript.", "dev,web,docs"},
 			{"https://www.figma.com/community", "Figma Community", "Templates, plugins, and resources shared by other designers.", "design,inspiration"},
 			{"https://linkding.link/", "Linkding", "A self-hosted bookmark manager with browser extensions.", "tools,selfhosted"},

@@ -78,11 +78,11 @@ func TestExtensionContract(t *testing.T) {
 	if object(t, w)["bookmark"] != nil {
 		t.Fatal("check must return null before create")
 	}
-	payload := `{"url":"https://example.org","title":"Grüße aus Köln","notes":"Loot & Wissen","tag_names":["Games","arpg","DIABLO","games"]}`
+	payload := `{"url":"https://example.org","title":"Grüße aus Dresden","notes":"Reise & Kultur","tag_names":["Travel","city","DRESDEN","travel"]}`
 	w = request(s, "POST", "/api/bookmarks/?disable_scraping&disable_html_snapshot", payload, true)
 	expectStatus(t, w, 201)
 	b := decodeBookmark(t, w)
-	if b.ID == 0 || b.Title != "Grüße aus Köln" || len(b.Tags) != 3 {
+	if b.ID == 0 || b.Title != "Grüße aus Dresden" || len(b.Tags) != 3 {
 		t.Fatalf("unexpected bookmark %#v", b)
 	}
 	for _, key := range []string{"favicon_url", "preview_image_url", "website_title", "website_description", "web_archive_snapshot_url"} {
@@ -125,9 +125,9 @@ func TestExtensionContract(t *testing.T) {
 func TestPaginationSearchAndPartialUpdates(t *testing.T) {
 	_, s := fixture(t)
 	for i, p := range []string{
-		`{"url":"https://one.test","title":"Diablo Loot","tag_names":["games","arpg","diablo"]}`,
-		`{"url":"https://two.test","title":"Path of Exile","notes":"Loot finden","tag_names":["games","arpg","poe"]}`,
-		`{"url":"https://three.test","title":"Andere Spiele","tag_names":["games"]}`,
+		`{"url":"https://one.test","title":"Dresden Travel Guide","tag_names":["travel","city","dresden"]}`,
+		`{"url":"https://two.test","title":"Leipzig","notes":"Visitor guide","tag_names":["travel","city","leipzig"]}`,
+		`{"url":"https://three.test","title":"Hiking trails","tag_names":["travel"]}`,
 	} {
 		w := request(s, "POST", "/api/bookmarks/", p, true)
 		expectStatus(t, w, 201)
@@ -139,7 +139,7 @@ func TestPaginationSearchAndPartialUpdates(t *testing.T) {
 		q     string
 		count int
 	}{
-		{"%23games", 3}, {"%23games+%23arpg", 2}, {"%23games+%23arpg+%23diablo", 1}, {"Loot", 2}, {"loot+%23diablo", 1}, {"%22Diablo+Loot%22", 1}, {"%23missing", 0}, {"%22%3B+DROP+TABLE+bookmarks%3B%22", 0},
+		{"%23travel", 3}, {"%23travel+%23city", 2}, {"%23travel+%23city+%23dresden", 1}, {"Guide", 2}, {"guide+%23dresden", 1}, {"%22Dresden+Travel+Guide%22", 1}, {"%23missing", 0}, {"%22%3B+DROP+TABLE+bookmarks%3B%22", 0},
 	} {
 		t.Run(tc.q, func(t *testing.T) {
 			w := request(s, "GET", "/api/bookmarks/?q="+tc.q, "", true)
@@ -149,13 +149,13 @@ func TestPaginationSearchAndPartialUpdates(t *testing.T) {
 			}
 		})
 	}
-	w := request(s, "GET", "/api/bookmarks/?limit=1&offset=1&q=%23games", "", true)
+	w := request(s, "GET", "/api/bookmarks/?limit=1&offset=1&q=%23travel", "", true)
 	expectStatus(t, w, 200)
 	v := object(t, w)
 	if v["next"] == nil || v["previous"] == nil || !strings.HasPrefix(v["next"].(string), "http://example.com/") {
 		t.Fatal(w.Body.String())
 	}
-	w = signedIn(t, s)("GET", "/api/orbia/facets?q=%23diablo", "", "http://example.com")
+	w = signedIn(t, s)("GET", "/api/orbia/facets?q=%23dresden", "", "http://example.com")
 	expectStatus(t, w, 200)
 	if len(object(t, w)["results"].([]any)) != 3 {
 		t.Fatal(w.Body.String())
@@ -329,13 +329,13 @@ func TestTenThousandBookmarks(t *testing.T) {
 		for i := 0; i < 10000; i++ {
 			url := fmt.Sprintf("https://scale.test/%d", i)
 			title := fmt.Sprintf("Bookmark %d", i)
-			tags := []string{"games"}
+			tags := []string{"travel"}
 			if i%10 == 0 {
-				tags = append(tags, "arpg")
+				tags = append(tags, "city")
 			}
 			if i%100 == 0 {
-				tags = append(tags, "diablo")
-				title += " Loot"
+				tags = append(tags, "dresden")
+				title += " Guide"
 			}
 			if _, e := saveBookmark(c, 0, BookmarkInput{URL: &url, Title: &title, Tags: &tags}, false); e != nil {
 				return e
@@ -349,11 +349,11 @@ func TestTenThousandBookmarks(t *testing.T) {
 	t.Logf("10,000 bookmarks inserted in %s", time.Since(start))
 	start = time.Now()
 	for i := 0; i < 20; i++ {
-		books, n, e := store.List(Search{Query: "Loot #games #arpg #diablo", Limit: 36})
+		books, n, e := store.List(Search{Query: "Guide #travel #city #dresden", Limit: 36})
 		if e != nil || n != 100 || len(books) != 36 {
 			t.Fatalf("scale query: %d / %d %v", len(books), n, e)
 		}
-		tags, e := store.Tags(Search{Query: "#games #arpg #diablo"}, true)
+		tags, e := store.Tags(Search{Query: "#travel #city #dresden"}, true)
 		if e != nil || len(tags) != 3 {
 			t.Fatalf("facets: %d %v", len(tags), e)
 		}

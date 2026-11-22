@@ -13,7 +13,7 @@
 
 ## Search at 10,000 bookmarks
 
-The test inserted 10,000 records with overlapping tags into a fresh on-disk SQLite database in 415 ms. A search for `Loot #games #arpg #diablo` returned 100 matches and a page of 36. Twenty iterations of search plus tag facets averaged 5.53 ms on this host. The test checks correctness, so slower hardware does not produce an artificial failure.
+The test inserts 10,000 records with overlapping tags into a fresh on-disk SQLite database. A search for `Guide #travel #city #dresden` returns 100 matches and a page of 36. The test checks correctness, so slower hardware does not produce an artificial failure.
 
 These times measure store operations with a warm local database. Browser debounce, network latency, concurrent imports and Unraid storage performance are additional costs.
 
