@@ -728,7 +728,7 @@ function availableCommands() {
       },
     })),
     {
-      label: t("Neue Dashboard-Seite"),
+      label: t("Dashboard-Seite hinzufügen"),
       icon: "plus",
       run: () => editPage(true),
     },
@@ -945,7 +945,7 @@ function editPage(create) {
   const page = activePage(),
     newID = uid();
   editor(
-    create ? t("Neue Dashboard-Seite") : t("Dashboard-Seite bearbeiten"),
+    create ? t("Dashboard-Seite hinzufügen") : t("Dashboard-Seite bearbeiten"),
     inputField(
       "name",
       "Name",

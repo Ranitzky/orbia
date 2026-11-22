@@ -362,7 +362,7 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
     /bereits vergeben/,
   );
   await page.keyboard.press("Escape");
-  await command(page, "Neue Dashboard-Seite");
+  await command(page, "Dashboard-Seite hinzufügen");
   await page.getByLabel("Name", { exact: true }).fill("Arbeit");
   await page.getByRole("button", { name: "Speichern", exact: true }).click();
   await page.locator("#editor-dialog").waitFor({ state: "hidden" });
@@ -662,8 +662,8 @@ test("language changes in settings, persists and keeps bookmark search data inta
   await wait(page, () => document.querySelector("#panel-count").textContent === "1 result");
   await page.keyboard.press("Escape");
   await page.keyboard.press("Meta+k");
-  await page.locator("#command-query").fill("new dashboard page");
-  await page.getByRole("button", {name:"New dashboard page", exact:true}).waitFor();
+  await page.locator("#command-query").fill("add dashboard page");
+  await page.getByRole("button", {name:"Add dashboard page", exact:true}).waitFor();
   await page.keyboard.press("Escape");
   await page.reload();
   await page.getByRole("button", {name:"Settings", exact:true}).click();
@@ -683,7 +683,7 @@ test("adding a seventh group shows an error toast", async () => {
   await page.keyboard.press("Meta+e");
   const editBar = page.locator("#edit-bar");
   await editBar.getByRole("button", { name: "Add page", exact: true }).click();
-  const newPage = page.getByRole("dialog", { name: "New dashboard page", exact: true });
+  const newPage = page.getByRole("dialog", { name: "Add dashboard page", exact: true });
   await newPage.getByLabel("Name", { exact: true }).fill("Group limit");
   await newPage.getByRole("button", { name: "Save", exact: true }).click();
   const editor = page.locator("#editor-dialog");

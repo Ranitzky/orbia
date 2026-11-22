@@ -177,7 +177,7 @@ export default {
   "Akzentfarbe": "Accent color",
   "Beim Löschen werden auch die {count} Quicklinks dieser Gruppe entfernt.": "Deleting this group also removes its quicklinks ({count}).",
   "Du kannst höchstens neun Seiten anlegen.": "You can create up to nine pages.",
-  "Neue Dashboard-Seite": "New dashboard page",
+  "Dashboard-Seite hinzufügen": "Add dashboard page",
   "Dashboard-Seite bearbeiten": "Edit dashboard page",
   "Zum Beispiel Arbeit": "For example, Work",
   "Die neue Seite startet leer. Füge anschließend deine Gruppen und Quicklinks hinzu.": "The new page starts empty. Then add your groups and quicklinks.",
