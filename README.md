@@ -1,4 +1,4 @@
-# Orbia
+# [ · ] Orbia
 
 Orbia is a self-hosted keyboard launcher and bookmark library for one person. The dashboard opens quicklinks by three-character code. The library searches saved titles, URLs, descriptions and notes, with exact tag filters. Both use the same Go process and SQLite database. The browser loads HTML, CSS, JavaScript and JetBrains Mono from your server.
 
