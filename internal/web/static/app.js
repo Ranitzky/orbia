@@ -689,12 +689,13 @@ function availableCommands() {
     {
       label: t("commands.openDashboard"),
       icon: "grid",
-      key: "1–9",
+      key: "⌘ D",
       run: () => setMode("dashboard"),
     },
     {
       label: t("commands.openBookmarks"),
       icon: "bookmark",
+      key: "⌘ B",
       run: () => setMode("bookmarks"),
     },
     {
@@ -1501,6 +1502,11 @@ document.addEventListener("keydown", (event) => {
   if (modifier && key === "e") {
     event.preventDefault();
     toggleEdit();
+    return;
+  }
+  if (event.metaKey !== event.ctrlKey && !event.shiftKey && (key === "d" || key === "b")) {
+    event.preventDefault();
+    setMode(key === "d" ? "dashboard" : "bookmarks");
     return;
   }
   if (modifier) return;

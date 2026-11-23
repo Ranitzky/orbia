@@ -109,6 +109,31 @@ test("main navigation highlights only the current view", async () => {
   }
 });
 
+test("dashboard and bookmarks keyboard shortcuts switch views and appear in settings", async () => {
+  const page = await pageFor();
+  for (const modifier of ["Meta", "Control"]) {
+    await page.keyboard.press(`${modifier}+b`);
+    await page.waitForURL(`${origin}/bookmarks`);
+    await page.locator("#bookmark-view").waitFor();
+    await page.locator("#bookmark-query").focus();
+    await page.keyboard.press(`${modifier}+d`);
+    await page.waitForURL(`${origin}/`);
+    await page.locator("#dashboard-view").waitFor();
+  }
+
+  await page.locator('.header-actions [data-action="settings"]').click();
+  await page.getByText("Tastatur", { exact: true }).click();
+  const shortcuts = page.locator(".shortcut-list");
+  for (const [label, keys] of [
+    ["Dashboard öffnen", "⌘ / Ctrl D"],
+    ["Bookmarks öffnen", "⌘ / Ctrl B"],
+  ]) {
+    const shortcut = shortcuts.getByText(label, { exact: true });
+    await shortcut.waitFor();
+    assert.equal(await shortcut.evaluate(el => el.nextElementSibling.textContent), keys);
+  }
+});
+
 test("switching to scrollable bookmarks preserves the content position and width", async () => {
   const page = await pageFor();
   // Keep the overflow independent of the number of seeded bookmarks.

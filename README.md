@@ -51,6 +51,7 @@ The German and English catalogs in `internal/web/static/de.js` and `internal/web
 | Action | How |
 | --- | --- |
 | Launch an app | Click or tap a quicklink, or type its three-character code on the dashboard. After one or two characters, a unique match shows a destination preview at the bottom and Enter opens it early. Backspace corrects the prefix and Escape clears it. |
+| Switch between the dashboard and bookmarks | Cmd/Ctrl+D opens the dashboard. Cmd/Ctrl+B opens bookmarks. Both are listed under **Settings → Keyboard**. Use the navigation buttons if your browser intercepts either shortcut. |
 | Change dashboard | Press 1–9 or choose a page in the command palette. Each page has its own groups and codes. |
 | Edit the dashboard | Cmd/Ctrl+E opens edit mode. Select a link to change its name, code, group or URL. Drag a quicklink by its code to reorder it or move it to another group. Drop on the add-link area to append it, including in an empty group. Edit group names, colors and order using their controls. Each page supports up to six groups. |
 | Add a quicklink or bookmark | Press **+** outside a text field to add a quicklink on the dashboard or a bookmark in the library. The header and mobile bar also offer an add button. Enter bookmark tags as `#travel #city #dresden` or separate them with commas. |
