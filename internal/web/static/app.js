@@ -323,6 +323,14 @@ async function changeDashboard(change) {
     state.saving = false;
   }
 }
+const dashboardGrid = $("#groups");
+function updateDashboardFade() {
+  const remaining = dashboardGrid.scrollHeight - dashboardGrid.clientHeight - dashboardGrid.scrollTop;
+  dashboardGrid.classList.toggle("has-more-below", remaining > 1);
+}
+const dashboardResize = new ResizeObserver(updateDashboardFade);
+dashboardGrid.addEventListener("scroll", updateDashboardFade, { passive: true });
+
 function renderDashboard() {
   const page = activePage();
   $("#page-tabs").innerHTML = state.dashboard.pages
@@ -331,7 +339,7 @@ function renderDashboard() {
         `<button class="page-tab" role="tab" id="page-${escapeHTML(p.id)}" aria-selected="${p.id === page.id}" tabindex="${p.id === page.id ? 0 : -1}" data-page="${escapeHTML(p.id)}"><span>${String(i + 1).padStart(2, "0")}</span>${escapeHTML(p.name)}</button>`,
     )
     .join("");
-  $("#groups").innerHTML = page.groups.length
+  dashboardGrid.innerHTML = page.groups.length
     ? page.groups
         .map(
           (g) =>
@@ -342,6 +350,9 @@ function renderDashboard() {
   $("#edit-bar").hidden = !state.edit;
   $("#dashboard-toolbar").hidden =
     state.dashboard.pages.length === 1 && !state.edit;
+  dashboardResize.disconnect();
+  dashboardResize.observe(dashboardGrid);
+  for (const card of dashboardGrid.children) dashboardResize.observe(card);
   renderQuick();
 }
 function renderQuick() {

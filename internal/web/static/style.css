@@ -2153,6 +2153,10 @@ select:hover { border-color: var(--accent); }
   .groups-grid {
     grid-auto-rows: max-content;
     overflow-y: auto;
+    scroll-padding-block-end: 40px;
+  }
+  .groups-grid.has-more-below {
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
   }
 }
 @media (min-width: 641px) and (max-width: 900px) {

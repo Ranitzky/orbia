@@ -61,6 +61,8 @@ The German and English catalogs in `internal/web/static/de.js` and `internal/web
 
 Punctuation shortcuts work outside text fields. The app reserves unmodified letters for quicklink codes. Theme, dashboard page and bookmark layout persist per browser. Dates are present in API records for interchange. The interface shows no clock or date.
 
+On desktop, the bottom edge of the dashboard grid fades while more quicklinks are available below.
+
 ## Linkding clients and data transfer
 
 Open **Settings → Linkding integrations**, enter an app name and select **Generate token**. Copy the token before closing Settings. Enter the displayed Orbia server address and the token in Raycast or the Chrome/Firefox Linkding extension. Each token can read and modify the bookmark library through the Linkding-compatible API. Select **Revoke** beside an app to stop its access immediately.

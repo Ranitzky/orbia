@@ -260,6 +260,7 @@ test("dashboard controls stay in the header on full and empty pages", async () =
   });
   const grid = page.locator("#groups");
   const gridScrolls = () => grid.evaluate(el => el.scrollHeight > el.clientHeight);
+  const gridMask = () => grid.evaluate(el => getComputedStyle(el).maskImage);
   const control = page.locator('.header .nav-item[data-action="command"]');
   const controlTop = () => control.evaluate(el => el.getBoundingClientRect().top);
   const top = await controlTop();
@@ -269,6 +270,7 @@ test("dashboard controls stay in the header on full and empty pages", async () =
   await page.keyboard.press("Escape");
   assert.equal(await scrolls(), false);
   assert.equal(await gridScrolls(), false);
+  assert.equal(await gridMask(), "none");
 
   await page.getByRole("tab", { name: /Work/ }).click();
   await grid.locator(".empty-state").waitFor();
@@ -281,11 +283,16 @@ test("dashboard controls stay in the header on full and empty pages", async () =
   assert.equal(await controlTop(), top);
   assert.equal(await scrolls(), false);
   assert.equal(await gridScrolls(), true);
-  await grid.locator(".quicklink").last().scrollIntoViewIfNeeded();
+  await wait(page, () => getComputedStyle(document.querySelector("#groups")).maskImage !== "none");
+  await grid.evaluate(el => { el.scrollTop = el.scrollHeight; });
   assert.ok(await grid.evaluate(el => el.scrollTop > 0));
+  await wait(page, () => getComputedStyle(document.querySelector("#groups")).maskImage === "none");
+  await grid.evaluate(el => { el.scrollTop = 0; });
+  await wait(page, () => getComputedStyle(document.querySelector("#groups")).maskImage !== "none");
   assert.equal(await controlTop(), top);
   await page.setViewportSize({ width: 390, height: 768 });
   assert.equal(await scrolls(), true);
+  assert.equal(await gridMask(), "none");
 });
 
 test("quick status stays below the grid when typing shortcuts", async () => {
