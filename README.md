@@ -4,6 +4,25 @@ Orbia is a self-hosted keyboard launcher and bookmark library for one person. Th
 
 ![Orbia quick dashboard with color-coded quicklink groups](docs/dashboard.png)
 
+## Run on macOS with Docker Desktop
+
+Install and start [Docker Desktop](https://docs.docker.com/desktop/setup/install/mac-install/). Run these commands from any directory to start Orbia from the public image. Docker downloads the image on first run.
+
+```sh
+mkdir -p "$HOME/Orbia"
+
+docker run -d --name orbia \
+  --platform linux/amd64 \
+  --restart unless-stopped \
+  -p 127.0.0.1:8726:8726 \
+  -e PUID="$(id -u)" \
+  -e PGID="$(id -g)" \
+  -v "$HOME/Orbia:/data" \
+  ghcr.io/ranitzky/orbia:latest
+```
+
+Open [Orbia](http://127.0.0.1:8726) and complete setup. The port is reachable only from your Mac. The database lives at `~/Orbia/orbia.db` and stays there when you replace the container. `PUID` and `PGID` give the container process your user and group IDs so it can write to that folder. On Apple silicon, Docker Desktop runs the `linux/amd64` image through emulation.
+
 ## Run on Unraid
 
 Save [docker-compose.yml](deploy/unraid/docker-compose.yml) on your Unraid server. The file pulls the Linux AMD64 image from GitHub Container Registry and uses port 8726 and `/mnt/user/appdata/orbia` for SQLite data.
