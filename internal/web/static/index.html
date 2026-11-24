@@ -10,8 +10,8 @@
   <title>Orbia</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" href="/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/style.css?v=20" />
-  <script src="/app.js?v=31" type="module"></script>
+  <link rel="stylesheet" href="/style.css?v=21" />
+  <script src="/app.js?v=33" type="module"></script>
 </head>
 
 <body>
@@ -339,8 +339,13 @@
       <summary data-i18n="tokens.title"></summary>
       <p data-i18n="tokens.instructions"></p>
       <div class="copy-field">
-        <code id="server-url"></code><button class="text-button" data-action="copy-url" data-i18n="common.copy"></button>
+        <code id="server-url"></code>
+        <button type="button" class="text-button copy-button" data-action="copy-url" data-i18n-aria-label="common.copy">
+          <span aria-hidden="true" data-i18n="common.copy"></span>
+          <svg aria-hidden="true"><use href="#i-check" /></svg>
+        </button>
       </div>
+      <p id="server-url-status" class="small copy-status" role="status"></p>
       <form class="integration-form" id="token-form" method="post">
         <label for="token-name" data-i18n="tokens.appName"></label>
         <input id="token-name" required maxlength="80" data-i18n-placeholder="tokens.appPlaceholder" />
@@ -349,8 +354,12 @@
       <div id="new-token" hidden>
         <label for="token-value" data-i18n="tokens.newToken"></label>
         <div class="copy-field"><input id="token-value" readonly autocomplete="off" spellcheck="false" />
-          <button class="text-button" data-action="copy-token" data-i18n="common.copy"></button>
+          <button type="button" class="text-button copy-button" data-action="copy-token" data-i18n-aria-label="common.copy">
+            <span aria-hidden="true" data-i18n="common.copy"></span>
+            <svg aria-hidden="true"><use href="#i-check" /></svg>
+          </button>
         </div>
+        <p id="token-copy-status" class="small copy-status" role="status"></p>
       </div>
       <div id="token-list"></div>
       <p id="token-status" class="small" role="status"></p>

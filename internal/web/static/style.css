@@ -18,6 +18,7 @@
   --accent: #36d8d3;
   --dot: #254349;
   --danger: #f2a0ad;
+  --success: #71dfa5;
   --shadow: 0 24px 90px #0008;
   --radius: 12px;
   font-family:
@@ -38,6 +39,7 @@
   --accent: #007c80;
   --dot: #b8d2d7;
   --danger: #a32443;
+  --success: #167044;
   --shadow: 0 24px 90px #1b363725;
 }
 * {
@@ -1322,6 +1324,24 @@ select:hover { border-color: var(--accent); }
   border: 1px solid var(--border);
   border-radius: 5px;
   background: var(--bg);
+}
+.copy-button {
+  display: grid;
+  place-items: center;
+}
+.copy-button > * {
+  grid-area: 1 / 1;
+}
+.copy-button svg,
+.copy-field:has(+ .copy-status.sr-only) .copy-button span {
+  visibility: hidden;
+}
+.copy-field:has(+ .copy-status.sr-only) .copy-button svg {
+  color: var(--success);
+  visibility: visible;
+}
+.settings-section p.copy-status:empty {
+  margin: 0;
 }
 .integration-form {
   display: grid;

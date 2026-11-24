@@ -780,6 +780,36 @@ test("settings issue and revoke client credentials and import from Linkding", as
   const value = page.getByLabel("New token · copy it now");
   await value.waitFor();
   const token = await value.inputValue();
+  // Plain HTTP outside localhost does not expose the Clipboard API.
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", { value: undefined });
+  });
+  const appName = page.getByLabel("App name");
+  const settings = page.getByRole("dialog", { name: "Settings" });
+  const copies = [
+    ["copy-url", "Server address copied.", origin, "Please copy the address from the field."],
+    ["copy-token", "Token copied.", token, "The token is selected. Copy it now."],
+  ];
+  for (const [action, message, expected] of copies) {
+    const button = settings.locator(`[data-action="${action}"]`);
+    await button.click();
+    await button.locator("svg").waitFor();
+    assert.equal(await button.locator("span").isVisible(), false);
+    assert.equal(await button.getAttribute("aria-label"), "Copy");
+    assert.equal(await settings.locator('[role="status"].sr-only').filter({ hasText: message }).count(), 1);
+    await appName.fill("");
+    await appName.press("ControlOrMeta+v");
+    assert.ok(await appName.inputValue() === expected, `${action} should paste the copied value`);
+  }
+  await appName.fill("");
+  await page.evaluate(() => { document.execCommand = () => false; });
+  for (const [action, , , manualCopy] of copies) {
+    const button = settings.locator(`[data-action="${action}"]`);
+    await button.click();
+    await settings.locator('[role="status"].error').filter({ hasText: manualCopy }).waitFor();
+    assert.equal(await button.locator("svg").isVisible(), false);
+    assert.equal(await button.locator("span").isVisible(), true);
+  }
   const headers = {Authorization: "Token " + token};
   const client = page.context().request;
   assert.equal((await client.get(origin + "/api/user/profile/", {headers})).status(), 200);
@@ -787,6 +817,7 @@ test("settings issue and revoke client credentials and import from Linkding", as
   await page.getByRole("button", {name:"Close settings"}).click();
   await wait(page, () => document.querySelector("#token-value").value === "");
   await page.getByRole("button", {name:"Settings", exact:true}).click();
+  assert.equal(await settings.locator(".copy-status.error").count(), 0);
   page.once("dialog", dialog => dialog.accept());
   await page.locator("#token-list .copy-field").filter({hasText:"Browser test"}).getByText("Revoke").click();
   await page.getByText("Token revoked.", {exact:true}).waitFor();

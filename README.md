@@ -84,7 +84,7 @@ On desktop, the bottom edge of the dashboard grid fades while more quicklinks ar
 
 ## Linkding clients and data transfer
 
-Open **Settings → Linkding integrations**, enter an app name and select **Generate token**. Copy the token before closing Settings. Enter the displayed Orbia server address and the token in Raycast or the Chrome/Firefox Linkding extension. Each token can read and modify the bookmark library through the Linkding-compatible API. Select **Revoke** beside an app to stop its access immediately.
+Open **Settings → Linkding integrations**, enter an app name and select **Generate token**. Use the **Copy** buttons to put the Orbia server address and the token on your clipboard. A green check mark confirms the copy. Copy the token before closing Settings, then paste the address and the token into Raycast or the Chrome/Firefox Linkding extension. Each token can read and modify the bookmark library through the Linkding-compatible API. Select **Revoke** beside an app to stop its access immediately.
 
 Token hashes are stored in SQLite and excluded from HTML and JSON exports.
 

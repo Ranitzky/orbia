@@ -1054,6 +1054,10 @@ function integrationStatus(id, message, error = false) {
   el.textContent = message;
   el.classList.toggle("error", error);
 }
+function copyStatus(id, message, copied = false) {
+  $(id).classList.toggle("sr-only", copied);
+  integrationStatus(id, message, !copied && message !== "");
+}
 function renderTokens() {
   $("#token-list").replaceChildren(...tokenEntries.map(entry => {
     const row = document.createElement("div");
@@ -1091,6 +1095,7 @@ async function loadTokens() {
 function clearNewToken() {
   $("#token-value").value = "";
   $("#new-token").hidden = true;
+  copyStatus("#token-copy-status", "");
 }
 $("#settings-dialog").addEventListener("close", () => {
   settingsGeneration++;
@@ -1198,6 +1203,7 @@ function openSettings() {
   integrationStatus("#token-status", "");
   loadTokens().catch(error => integrationStatus("#token-status", error.message, true));
   $("#server-url").textContent = location.origin;
+  copyStatus("#server-url-status", "");
   $("#import-status").textContent = "";
   openDialog("#settings-dialog");
 }
@@ -1236,6 +1242,35 @@ async function importFile() {
   } finally {
     input.disabled = false;
     input.value = "";
+  }
+}
+
+async function copyIntegrationText(text) {
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Try the selection-based copy when the browser rejects the Clipboard API.
+    }
+  }
+
+  const focused = document.activeElement;
+  const field = document.createElement("textarea");
+  field.value = text;
+  field.readOnly = true;
+  field.style.cssText = "position: fixed; top: 0; left: 0; opacity: 0;";
+  // A field outside the modal settings dialog cannot receive focus.
+  $("#settings-dialog").append(field);
+  try {
+    field.focus({ preventScroll: true });
+    field.select();
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    field.remove();
+    focused?.focus({ preventScroll: true });
   }
 }
 
@@ -1280,21 +1315,13 @@ const actions = {
   },
   "copy-token": async () => {
     const input = $("#token-value");
-    try {
-      await navigator.clipboard.writeText(input.value);
-      integrationStatus("#token-status", t("tokens.copied"));
-    } catch {
-      input.select();
-      integrationStatus("#token-status", t("tokens.copyManually"));
-    }
+    const copied = await copyIntegrationText(input.value);
+    if (!copied) input.select();
+    copyStatus("#token-copy-status", t(copied ? "tokens.copied" : "tokens.copyManually"), copied);
   },
   "copy-url": async () => {
-    try {
-      await navigator.clipboard.writeText(location.origin);
-      toast(t("tokens.serverCopied"));
-    } catch {
-      toast(t("tokens.copyServerManually"));
-    }
+    const copied = await copyIntegrationText($("#server-url").textContent);
+    copyStatus("#server-url-status", t(copied ? "tokens.serverCopied" : "tokens.copyServerManually"), copied);
   },
   logout,
 };
