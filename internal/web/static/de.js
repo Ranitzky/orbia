@@ -155,6 +155,7 @@ export default {
   "keyboard.openCommands": "Befehle öffnen",
   "keyboard.run": "ausführen",
   "keyboard.searchBookmarks": "Bookmarks suchen",
+  "keyboard.searchByTag": "Nach Tags suchen",
   "keyboard.select": "wählen",
   "keyboard.switchPage": "Dashboard-Seite wechseln",
   "keyboard.title": "Tastatur",

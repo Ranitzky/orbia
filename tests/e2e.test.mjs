@@ -431,9 +431,12 @@ test("keyboard editing persists, duplicate codes rejected, page switching and co
 
 test("tag prefixes suggest names and bookmarks, then complete the active filter", async () => {
   const page = await pageFor();
-  await page.keyboard.press("Meta+p");
+  await page.keyboard.press("#");
+  await page.locator("#search-dialog").waitFor();
   const query = page.locator("#panel-query");
-  await query.fill("#D");
+  assert.equal(await query.inputValue(), "#");
+  await page.keyboard.type("D");
+  assert.equal(await query.inputValue(), "#D");
   await wait(page, () => document.querySelector("#panel-count").textContent === "4 Ergebnisse");
   assert.deepEqual(await page.locator("#panel-tags button").allTextContents(), ["#design", "#dev", "#docs", "#dresden"]);
   assert.equal(await page.locator(".panel-result").count(), 4);

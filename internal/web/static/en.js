@@ -155,6 +155,7 @@ export default {
   "keyboard.openCommands": "Open commands",
   "keyboard.run": "run",
   "keyboard.searchBookmarks": "Search bookmarks",
+  "keyboard.searchByTag": "Search by tag",
   "keyboard.select": "select",
   "keyboard.switchPage": "Switch dashboard page",
   "keyboard.title": "Keyboard",

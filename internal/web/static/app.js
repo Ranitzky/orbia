@@ -614,11 +614,13 @@ function clearPanelResults() {
   $("#panel-tags").replaceChildren();
   $("#panel-count").textContent = t("search.loading");
 }
-function openSearch() {
+function openSearch(initialQuery = "") {
   clearPanelResults();
   openDialog("#search-dialog");
-  $("#panel-query").value = "";
-  $("#panel-query").focus();
+  const query = $("#panel-query");
+  query.value = initialQuery;
+  query.focus();
+  query.setSelectionRange(initialQuery.length, initialQuery.length);
   loadPanel();
 }
 async function loadPanel() {
@@ -1448,10 +1450,11 @@ $("#search-dialog").addEventListener("close", () => {
   panelSequence++;
 });
 document.addEventListener("keydown", (event) => {
-  if (!state.authenticated || event.isComposing || event.altKey) return;
+  if (!state.authenticated || event.isComposing) return;
   const modifier = event.metaKey || event.ctrlKey,
     key = event.key.toLowerCase(),
     dialog = $("dialog[open]");
+  if (event.altKey && key !== "#") return;
   if (modifier && (key === "k" || key === "p")) {
     event.preventDefault();
     key === "k" ? openCommands() : openSearch();
@@ -1516,7 +1519,7 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     if (key === "/") openSearch();
     if (key === "+") actions["mobile-add"]();
-    if (key === "#") setMode("bookmarks");
+    if (key === "#") openSearch("#");
     if (key === ",") openSettings();
     return;
   }
