@@ -900,7 +900,10 @@ test("first-run setup, passwordless access and password changes in Settings", as
     await page.goto(setupOrigin);
     const mode = page.getByLabel("Sign-in method");
     const save = page.getByRole("button", {name: "Save access settings"});
+    const warning = page.getByText("Anyone who can reach this address can manage your bookmarks, app tokens, and settings.");
     await mode.selectOption("open");
+    await warning.waitFor();
+    const setupWarningColor = await warning.evaluate(el => getComputedStyle(el).color);
     await save.click();
     await page.locator("#app").waitFor();
     const other = await guest.newPage();
@@ -909,6 +912,8 @@ test("first-run setup, passwordless access and password changes in Settings", as
     const settings = page.getByRole("button", {name:"Settings",exact:true});
     await settings.click();
     await page.getByText("Access", { exact: true }).click();
+    await warning.waitFor();
+    assert.equal(setupWarningColor, await warning.evaluate(el => getComputedStyle(el).color));
     await mode.selectOption("password");
     await page.getByLabel("New password").fill("test-owner-password");
     await save.click();

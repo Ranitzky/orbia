@@ -1405,7 +1405,8 @@ select:hover { border-color: var(--accent); }
 .integration-form button { justify-self: start; }
 #token-list .copy-field { margin-top: 8px; overflow-wrap: anywhere; }
 #token-value { min-width: 0; flex: 1; }
-.settings-section p.error { color: var(--danger); }
+.settings-section p.error,
+#open-access-hint { color: var(--danger); }
 .copy-field code {
   font-size: 0.875rem;
   overflow-wrap: anywhere;
