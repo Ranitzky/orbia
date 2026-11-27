@@ -399,6 +399,21 @@ main:has(> #dashboard-view:not([hidden])),
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 30px;
 }
+@property --group-glow-x {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+@property --group-glow-y {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+@property --group-glow-spread {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
 .group-card {
   --group-color: var(--accent);
   position: relative;
@@ -426,12 +441,27 @@ main:has(> #dashboard-view:not([hidden])),
   border: 2px solid var(--group-color);
   border-radius: calc(var(--radius) - 1px);
   mask-image: radial-gradient(
-    ellipse 66% 3.5rem at top left,
+    ellipse 66% calc(3.5rem + var(--group-glow-spread, 0px))
+      at var(--group-glow-x, 0%) var(--group-glow-y, 0%),
     black,
     rgb(0 0 0 / 65%) 36%,
     rgb(0 0 0 / 17%) 74%,
     transparent
   );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .group-card::before {
+    --group-glow-x: var(--group-pointer-x, 0%);
+    --group-glow-y: var(--group-pointer-y, 0%);
+    --group-glow-spread: var(--group-pointer-spread, 0px);
+    transition:
+      --group-glow-x var(--group-glow-duration, 350ms) ease-out,
+      --group-glow-y var(--group-glow-duration, 350ms) ease-out,
+      --group-glow-spread var(--group-glow-duration, 350ms) ease-out;
+  }
+  .group-card[data-glow-tracking]::before {
+    --group-glow-duration: 100ms;
+  }
 }
 .group-card:hover {
   border-color: color-mix(in srgb, var(--group-color), var(--border) 60%);

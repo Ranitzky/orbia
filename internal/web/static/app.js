@@ -331,6 +331,33 @@ function updateDashboardFade() {
 const dashboardResize = new ResizeObserver(updateDashboardFade);
 dashboardGrid.addEventListener("scroll", updateDashboardFade, { passive: true });
 
+function trackGroupGlow(card) {
+  const motion = matchMedia("(prefers-reduced-motion: no-preference)");
+  function reset() {
+    card.removeAttribute("data-glow-tracking");
+    card.style.removeProperty("--group-pointer-x");
+    card.style.removeProperty("--group-pointer-y");
+    card.style.removeProperty("--group-pointer-spread");
+  }
+  function move(event) {
+    if (event.pointerType !== "mouse" || !motion.matches) return;
+    const rect = card.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return reset();
+    card.setAttribute("data-glow-tracking", "");
+    card.style.setProperty("--group-pointer-x", `${x * 100}%`);
+    card.style.setProperty("--group-pointer-y", `${y * 100}%`);
+    // Keep the glow visible along the border as the pointer moves toward the middle.
+    const spread = Math.min(event.clientY - rect.top, rect.bottom - event.clientY);
+    card.style.setProperty("--group-pointer-spread", `${spread}px`);
+  }
+  card.addEventListener("pointerenter", move);
+  card.addEventListener("pointermove", move);
+  card.addEventListener("pointerleave", reset);
+  card.addEventListener("pointercancel", reset);
+}
+
 function renderDashboard() {
   const page = activePage();
   $("#page-tabs").innerHTML = state.dashboard.pages
@@ -352,7 +379,10 @@ function renderDashboard() {
     state.dashboard.pages.length === 1 && !state.edit;
   dashboardResize.disconnect();
   dashboardResize.observe(dashboardGrid);
-  for (const card of dashboardGrid.children) dashboardResize.observe(card);
+  for (const card of dashboardGrid.children) {
+    dashboardResize.observe(card);
+    if (page.groups.length) trackGroupGlow(card);
+  }
   renderQuick();
 }
 function renderQuick() {

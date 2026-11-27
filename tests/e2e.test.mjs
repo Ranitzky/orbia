@@ -109,6 +109,30 @@ test("main navigation highlights only the current view", async () => {
   }
 });
 
+test("the group border glow follows the mouse and returns to its starting corner", async () => {
+  const page = await pageFor({ reducedMotion: "no-preference" });
+  const card = page.locator(".group-card").first();
+  await card.waitFor();
+  const { x, y, width, height } = await card.boundingBox();
+  const startingMask = await card.evaluate(el => getComputedStyle(el, "::before").maskImage);
+  assert.notEqual(startingMask, "none");
+
+  await page.mouse.move(x + width - 12, y + height - 12);
+  await wait(page, () => {
+    const style = getComputedStyle(document.querySelector(".group-card"), "::before");
+    return parseFloat(style.getPropertyValue("--group-glow-x")) > 85 &&
+      parseFloat(style.getPropertyValue("--group-glow-y")) > 85;
+  });
+  assert.notEqual(await card.evaluate(el => getComputedStyle(el, "::before").maskImage), startingMask);
+
+  await page.mouse.move(0, 0);
+  await wait(page, mask => getComputedStyle(document.querySelector(".group-card"), "::before").maskImage === mask, startingMask);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.mouse.move(x + width - 12, y + height - 12);
+  assert.equal(await card.evaluate(el => getComputedStyle(el, "::before").maskImage), startingMask);
+});
+
 test("a published update marks the Settings icon and links to the guide inside Settings", async () => {
   const page = await pageFor();
   await page.clock.install();
