@@ -44,6 +44,7 @@ jobs:
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY,,}"
           docker build --platform linux/amd64 \
+            --build-arg "ORBIA_REVISION=$GITHUB_SHA" \
             --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             --tag "$image:$GITHUB_SHA" --tag "$image:latest" .

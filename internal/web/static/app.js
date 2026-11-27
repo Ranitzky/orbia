@@ -32,8 +32,8 @@ const preference = (key, value) => {
 };
 const defaultLanguage = "en";
 const languageCatalogs = {
-  de: () => import("./de.js?v=3"),
-  en: () => import("./en.js?v=18"),
+  de: () => import("./de.js?v=4"),
+  en: () => import("./en.js?v=19"),
 };
 let messages = {};
 
@@ -1594,6 +1594,27 @@ document.addEventListener("keydown", (event) => {
     }
   }
 });
+async function refreshUpdateNotice() {
+  if (!state.authenticated || document.hidden) return;
+  try {
+    const response = await fetch("/api/orbia/update");
+    if (response.ok) {
+      const { available } = await response.json();
+      const indicator = $("#settings-update-indicator");
+      const settingsButton = $("#settings-button");
+      const showUpdate = available === true;
+      indicator.hidden = !showUpdate;
+      $("#update-notice").hidden = !showUpdate;
+      if (showUpdate) settingsButton.setAttribute("aria-describedby", indicator.id);
+      else settingsButton.removeAttribute("aria-describedby");
+    }
+  } catch {
+    // The update status can be retried without interrupting the current view.
+  }
+}
+document.addEventListener("visibilitychange", refreshUpdateNotice);
+setInterval(refreshUpdateNotice, 60_000);
+
 async function start() {
   try {
     const access = await api("/auth/status");
@@ -1616,6 +1637,7 @@ async function start() {
     state.authenticated = true;
     $("#login").hidden = true;
     $("#app").hidden = false;
+    void refreshUpdateNotice();
     const edit = location.pathname.match(/^\/bookmarks\/(\d+)\/edit\/?$/);
     const library =
       /^\/bookmarks\/?$/.test(location.pathname) ||

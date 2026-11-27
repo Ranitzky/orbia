@@ -70,7 +70,7 @@ func decodeBookmark(t *testing.T, w *httptest.ResponseRecorder) Bookmark {
 
 func TestExtensionContract(t *testing.T) {
 	_, s := fixture(t)
-	for _, path := range []string{"/api/bookmarks/", "/api/tags/", "/api/user/profile/", "/api/orbia/dashboard"} {
+	for _, path := range []string{"/api/bookmarks/", "/api/tags/", "/api/user/profile/", "/api/orbia/dashboard", "/api/orbia/update"} {
 		expectStatus(t, request(s, "GET", path, "", false), 401)
 	}
 	w := request(s, "GET", "/api/bookmarks/check/?url=https%3A%2F%2Fexample.org", "", true)

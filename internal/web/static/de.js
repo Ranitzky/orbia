@@ -211,4 +211,6 @@ export default {
   "tokens.revoked": "Token widerrufen.",
   "tokens.serverCopied": "Server-Adresse kopiert.",
   "tokens.title": "Linkding-Integrationen",
+  "update.available": "Update verfügbar",
+  "update.instructions": "Update-Anleitung öffnen",
 };

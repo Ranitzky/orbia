@@ -10,8 +10,8 @@
   <title>Orbia</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" href="/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/style.css?v=21" />
-  <script src="/app.js?v=33" type="module"></script>
+  <link rel="stylesheet" href="/style.css?v=23" />
+  <script src="/app.js?v=35" type="module"></script>
 </head>
 
 <body>
@@ -108,9 +108,12 @@
         <button class="nav-item" data-action="command" data-i18n-aria-label="commands.title"><svg aria-hidden="true">
             <use href="#i-command" />
           </svg></button>
-        <button class="icon-button" data-action="settings" data-i18n-aria-label="settings.title"><svg>
-            <use href="#i-settings" />
-          </svg></button>
+        <button id="settings-button" class="icon-button" data-action="settings" data-i18n-aria-label="settings.title">
+          <svg aria-hidden="true"><use href="#i-settings" /></svg>
+          <span id="settings-update-indicator" class="settings-update-indicator" hidden>
+            <span class="sr-only" data-i18n="update.available"></span>
+          </span>
+        </button>
       </div>
     </header>
 
@@ -287,6 +290,13 @@
           <use href="#i-close" />
         </svg>
       </button>
+    </div>
+    <div role="status">
+      <div id="update-notice" class="settings-section update-notice" hidden>
+        <span data-i18n="update.available"></span>
+        <a href="https://github.com/Ranitzky/orbia#update-orbia" target="_blank" rel="noopener noreferrer"
+          data-i18n="update.instructions"></a>
+      </div>
     </div>
     <section class="settings-section settings-general">
       <label for="language" data-i18n="settings.language"></label>

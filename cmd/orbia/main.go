@@ -16,6 +16,8 @@ import (
 	"orbia/internal/app"
 )
 
+var revision string // Set by the published Docker build.
+
 func env(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -62,6 +64,7 @@ func run() error {
 	server := &http.Server{Addr: env("ORBIA_ADDR", ":8726"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 60 * time.Second, WriteTimeout: 120 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 32 << 10}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	go handler.CheckForUpdates(ctx, revision)
 	done := make(chan error, 1)
 	go func() { slog.Info("Orbia listening", "address", server.Addr); done <- server.ListenAndServe() }()
 	select {

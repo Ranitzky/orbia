@@ -53,6 +53,26 @@ For a local Docker installation, use `ORBIA_DATA_DIR=./data`, set `PUID` and `PG
 
 Serve Orbia at the root of its own domain. Preserve the Host header and pass `/api/` token requests through the proxy. Browser sessions expire after 24 hours or on server restart. Use HTTPS when accessing Orbia across a network so that passwords and API tokens are encrypted in transit.
 
+## Update Orbia
+
+Published Orbia images check GitHub Container Registry at startup and every six hours. If `latest` points to a different build, a dot appears on the Settings icon. Open Settings to see **Update available** and a link to this guide above the general settings. The check fetches image metadata. You control when to replace the container. Source builds skip the check.
+
+For Docker Compose, including the Unraid example, run this from the directory containing your Compose file:
+
+```sh
+docker compose up -d --pull always --wait
+```
+
+If you started Orbia with `docker run`, pull the image, then stop and remove the old container. Use your actual container name if it differs from `orbia`.
+
+```sh
+docker pull --platform linux/amd64 ghcr.io/ranitzky/orbia:latest
+docker stop orbia
+docker rm orbia
+```
+
+Run your original `docker run` command again, for example the [Docker Desktop command](#run-on-macos-with-docker-desktop). Keep the same `/data` mount to use your existing database.
+
 ## Interface language
 
 The first Settings section contains language, theme and separate opening preferences for dashboard links and bookmark links. Both default to the current tab. Each choice is saved in this browser and applies to mouse and keyboard navigation, including dashboard codes and bookmark search results. Expand a section to manage access, integrations or backups, or to view keyboard shortcuts.

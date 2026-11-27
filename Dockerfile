@@ -4,7 +4,8 @@ WORKDIR /src
 COPY go.mod ./
 COPY cmd ./cmd
 COPY internal ./internal
-RUN CGO_ENABLED=1 go build -trimpath -ldflags="-s -w" -o /out/orbia ./cmd/orbia
+ARG ORBIA_REVISION
+RUN CGO_ENABLED=1 go build -trimpath -ldflags="-s -w -X main.revision=${ORBIA_REVISION}" -o /out/orbia ./cmd/orbia
 
 FROM alpine:3.23
 RUN apk add --no-cache sqlite-libs ca-certificates su-exec \

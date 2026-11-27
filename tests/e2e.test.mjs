@@ -109,6 +109,40 @@ test("main navigation highlights only the current view", async () => {
   }
 });
 
+test("a published update marks the Settings icon and links to the guide inside Settings", async () => {
+  const page = await pageFor();
+  await page.clock.install();
+  let available = false;
+  await page.route("**/api/orbia/update", route => route.fulfill({ json: { available } }));
+  const initialStatus = page.waitForResponse("**/api/orbia/update");
+  await page.reload();
+  await initialStatus;
+  const settings = page.getByRole("button", { name: "Einstellungen", exact: true });
+  const indicator = settings.locator("#settings-update-indicator");
+  const notice = page.locator("#update-notice");
+  await indicator.waitFor({ state: "hidden" });
+
+  available = true;
+  await page.clock.fastForward(60_000);
+  await indicator.waitFor();
+  assert.equal(await settings.getAttribute("aria-describedby"), "settings-update-indicator");
+  assert.equal(await indicator.textContent().then(text => text.trim()), "Update verfügbar");
+  await notice.waitFor({ state: "hidden" });
+  await settings.click();
+  const status = page.locator("#settings-dialog [role=status]:has(+ .settings-section.settings-general)");
+  await status.waitFor();
+  await notice.getByText("Update verfügbar", { exact: true }).waitFor();
+  const guide = status.getByRole("link", { name: "Update-Anleitung öffnen" });
+  assert.equal(await guide.getAttribute("href"), "https://github.com/Ranitzky/orbia#update-orbia");
+
+  available = false;
+  await page.clock.fastForward(60_000);
+  await notice.waitFor({ state: "hidden" });
+  await page.getByRole("button", { name: "Einstellungen schließen" }).click();
+  await indicator.waitFor({ state: "hidden" });
+  assert.equal(await settings.getAttribute("aria-describedby"), null);
+});
+
 test("dashboard and bookmarks keyboard shortcuts switch views and appear in settings", async () => {
   const page = await pageFor();
   for (const modifier of ["Meta", "Control"]) {

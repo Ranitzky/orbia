@@ -22,11 +22,12 @@ type Config struct {
 	SecureCookie bool
 }
 type Server struct {
-	store        *Store
-	auth         *auth
-	static       http.Handler
-	importActive atomic.Bool
-	sourceClient *http.Client
+	store           *Store
+	auth            *auth
+	static          http.Handler
+	importActive    atomic.Bool
+	updateAvailable atomic.Bool
+	sourceClient    *http.Client
 }
 
 func NewServer(s *Store, c Config) *Server {
@@ -201,6 +202,13 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(path, "/")
 	method := r.Method
 	switch path {
+	case "api/orbia/update":
+		if method != "GET" {
+			w.WriteHeader(405)
+			return
+		}
+		writeJSON(w, 200, map[string]bool{"available": s.updateAvailable.Load()})
+		return
 	case "api/orbia/tokens", "api/orbia/linkding-import":
 		if r.Header.Get("Authorization") != "" {
 			writeError(w, 403, "Sign in to manage integrations.")
