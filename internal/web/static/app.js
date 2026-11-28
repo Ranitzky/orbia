@@ -32,8 +32,8 @@ const preference = (key, value) => {
 };
 const defaultLanguage = "en";
 const languageCatalogs = {
-  de: () => import("./de.js?v=4"),
-  en: () => import("./en.js?v=19"),
+  de: () => import("./de.js?v=7"),
+  en: () => import("./en.js?v=22"),
 };
 let messages = {};
 
@@ -151,7 +151,7 @@ function errorMessage(status, data) {
     "errors.invalidRequest"
   );
 }
-async function api(path, options = {}) {
+async function api(path, options = {}, onResponse) {
   let response;
   try {
     response = await fetch(path, {
@@ -186,7 +186,9 @@ async function api(path, options = {}) {
     error.status = response.status;
     throw error;
   }
-  return response.status === 204 ? null : response.json();
+  if (response.status === 204) return null;
+  onResponse?.(response);
+  return response.json();
 }
 function showLogin() {
   state.authenticated = false;
@@ -859,18 +861,20 @@ function editor(title, fields, save, remove) {
 }
 async function saveEditor(event) {
   event.preventDefault();
-  if (state.saving) return;
   const button = $("#save-button");
+  if (state.saving || button.disabled) return;
+  const save = editorSave;
   button.disabled = true;
   $("#editor-error").textContent = "";
   try {
-    await editorSave(new FormData($("#editor-form")));
+    const saved = await save(new FormData($("#editor-form")));
+    if (saved === false || editorSave !== save) return;
     $("#editor-dialog").close();
     toast(t("editor.saved"));
   } catch (error) {
-    $("#editor-error").textContent = error.message;
+    if (editorSave === save) $("#editor-error").textContent = error.message;
   } finally {
-    button.disabled = false;
+    if (editorSave === save) button.disabled = false;
   }
 }
 function editLink(id, groupID) {
@@ -1017,6 +1021,114 @@ function editPage(create) {
       : null,
   );
 }
+function canLookupBookmarkMetadata(value) {
+  const authority = /^https?:\/\/([^/?#]+)/i.exec(value)?.[1];
+  if (!authority) return false;
+
+  let target;
+  try {
+    target = new URL(value);
+  } catch {
+    return false;
+  }
+  if (target.username || target.password) return false;
+
+  const hostname = target.hostname.replace(/\.$/, "");
+  if (hostname.startsWith("[")) return authority.startsWith("[");
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+    // URL also accepts partial IPv4 literals. Wait for the full address.
+    return authority.split(":")[0] === hostname;
+  }
+
+  const labels = hostname.split(".");
+  return hostname.length <= 253 && labels.length > 1 &&
+    /^(?:[a-z]{2,63}|xn--[a-z0-9-]+)$/.test(labels.at(-1)) &&
+    labels.every(label => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label));
+}
+
+function autofillBookmarkMetadata() {
+  const dialog = $("#editor-dialog");
+  const url = $("#field-url");
+  const status = $("#bookmark-metadata-status");
+  const metadataFields = status.parentElement;
+  metadataFields.addEventListener("animationend", event => {
+    if (event.animationName === "bookmark-metadata-fade" && metadataFields.dataset.fetchGlow === "fading") {
+      metadataFields.removeAttribute("data-fetch-glow");
+    }
+  });
+  const fields = { title: $("#field-title"), description: $("#field-description") };
+  const edited = new Set();
+  for (const [name, field] of Object.entries(fields)) {
+    field.addEventListener("input", () => edited.add(name));
+  }
+
+  let timer, lookup;
+  function load(pasted = false) {
+    clearTimeout(timer);
+    const value = url.value.trim();
+    if (!dialog.open || !url.isConnected || !url.validity.valid ||
+        edited.size === 2 || !canLookupBookmarkMetadata(value)) return;
+    if (lookup?.url === value) return lookup.result;
+    lookup?.controller.abort();
+    const controller = new AbortController();
+    const current = () => dialog.open && url.isConnected && !controller.signal.aborted && url.value.trim() === value;
+    if (pasted) metadataFields.dataset.fetchGlow = "loading";
+    const result = api("/api/orbia/bookmark-metadata", {
+      method: "POST",
+      body: JSON.stringify({ url: value }),
+      signal: controller.signal,
+    }, response => {
+      if (current() && response.headers.get("X-Orbia-Metadata-Fetching") === "1") {
+        metadataFields.setAttribute("aria-busy", "true");
+        metadataFields.dataset.fetchGlow = "loading";
+      }
+    }).catch(() => undefined).then(metadata => {
+      if (!current()) return;
+      for (const [name, field] of Object.entries(fields)) {
+        if (!edited.has(name) && !field.value && metadata?.[name]) field.value = metadata[name];
+      }
+      metadataFields.removeAttribute("aria-busy");
+      if (metadataFields.hasAttribute("data-fetch-glow") || metadata?.title || metadata?.description) {
+        metadataFields.dataset.fetchGlow = "fading";
+      }
+      status.textContent = metadata === null || metadata?.title || metadata?.description
+        ? "" : t("bookmarks.metadataUnavailable");
+      return metadata;
+    });
+    lookup = { url: value, controller, result };
+    return result;
+  }
+
+  url.addEventListener("input", event => {
+    const pasted = event.inputType === "insertFromPaste" || event.inputType === "insertFromPasteAsQuotation";
+    if (pasted || lookup?.url !== url.value.trim()) {
+      lookup?.controller.abort();
+      lookup = undefined;
+      metadataFields.removeAttribute("data-fetch-glow");
+      metadataFields.removeAttribute("aria-busy");
+      status.textContent = "";
+      for (const [name, field] of Object.entries(fields)) {
+        if (!edited.has(name)) field.value = "";
+      }
+    }
+    clearTimeout(timer);
+    if (pasted) void load(true);
+    else timer = setTimeout(load, 400);
+  });
+  dialog.addEventListener("close", () => {
+    clearTimeout(timer);
+    lookup?.controller.abort();
+  }, { once: true });
+
+  return async (form) => {
+    const metadata = await load();
+    if (!dialog.open || !url.isConnected) return false;
+    for (const name of Object.keys(fields)) {
+      if (!edited.has(name) && !form.get(name) && metadata?.[name]) form.set(name, metadata[name]);
+    }
+    return true;
+  };
+}
 async function editBookmark(id) {
   let b;
   try {
@@ -1025,6 +1137,7 @@ async function editBookmark(id) {
     toast(error.message, true);
     return;
   }
+  let fillMetadata;
   editor(
     b ? t("bookmarks.edit") : t("bookmarks.new"),
     inputField(
@@ -1033,6 +1146,7 @@ async function editBookmark(id) {
       b?.url,
       'type="url" required autocomplete="url" placeholder="https://"',
     ) +
+      (b ? "" : '<div class="bookmark-metadata-fields">') +
       inputField(
         "title",
         t("bookmarks.title"),
@@ -1040,6 +1154,7 @@ async function editBookmark(id) {
         `maxlength="512" placeholder="${t("bookmarks.titlePlaceholder")}" data-1p-ignore`,
       ) +
       textareaField("description", t("bookmarks.description"), b?.description) +
+      (b ? "" : '<p id="bookmark-metadata-status" role="status"></p></div>') +
       inputField(
         "tags",
         t("bookmarks.tags"),
@@ -1049,6 +1164,7 @@ async function editBookmark(id) {
       textareaField("notes", t("bookmarks.notes"), b?.notes, 500000) +
       `<div class="form-row"><label for="field-archived">${t("bookmarks.status")}<select aria-label="${t("bookmarks.status")}" name="archived" id="field-archived"><option value="false">${t("bookmarks.saved")}</option><option value="true" ${b?.is_archived ? "selected" : ""}>${t("bookmarks.archived")}</option></select></label><label for="field-unread">${t("bookmarks.readStatus")}<select aria-label="${t("bookmarks.readStatus")}" name="unread" id="field-unread"><option value="false">${t("bookmarks.read")}</option><option value="true" ${b?.unread ? "selected" : ""}>${t("bookmarks.unread")}</option></select></label></div>`,
     async (form) => {
+      if (fillMetadata && !(await fillMetadata(form))) return false;
       const payload = {
         url: form.get("url").trim(),
         title: form.get("title").trim(),
@@ -1075,6 +1191,7 @@ async function editBookmark(id) {
         }
       : null,
   );
+  if (!b) fillMetadata = autofillBookmarkMetadata();
 }
 const tokensPath = "/api/orbia/tokens";
 const pullPath = "/api/orbia/linkding-import";

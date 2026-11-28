@@ -10,7 +10,9 @@ Dashboard pages and bookmarks are separate concepts. Keys 1–9 select dashboard
 
 One long-running Go process serves the API and embedded static assets. There is no JavaScript build step and no Node runtime in production. Files in `internal/web/static` are embedded into the binary. A local JetBrains Mono font removes a third-party font request and works offline after loading the app.
 
-SQLite is the only persistent service. Orbia links the system SQLite library through cgo, keeping the Go module dependency-free. `internal/sqlite` owns prepared statements, bindings, row decoding and transactions through a small cgo API. It deliberately does not implement a general `database/sql` driver. This reduces dependencies but makes the native boundary an explicit maintenance responsibility. It requires a C compiler and SQLite headers when building and a compatible SQLite library at runtime. Use a native Docker build for each architecture; ordinary `CGO_ENABLED=0` cross-compilation does not work.
+SQLite is the only persistent service. Orbia links the system SQLite library directly through cgo. `internal/sqlite` owns prepared statements, bindings, row decoding and transactions through a small cgo API. It deliberately does not implement a general `database/sql` driver. This reduces dependencies but makes the native boundary an explicit maintenance responsibility. It requires a C compiler and SQLite headers when building and a compatible SQLite library at runtime. Use a native Docker build for each architecture; ordinary `CGO_ENABLED=0` cross-compilation does not work.
+
+For bookmark metadata, Orbia uses `golang.org/x/net/html` to parse HTML and `golang.org/x/net/html/charset` to decode page text. Character decoding brings in `golang.org/x/text` as an indirect dependency.
 
 The Docker build and runtime use the same Alpine release to keep their native SQLite ABI compatible. The local Compose smoke test uses a Linux ARM64 image. A separate emulated AMD64 build also passed its startup healthcheck. Unraid hardware validation remains open.
 

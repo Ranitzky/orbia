@@ -43,6 +43,7 @@ export default {
   "bookmarks.gridView": "Grid view",
   "bookmarks.listView": "List view",
   "bookmarks.loadMore": "Load more",
+  "bookmarks.metadataUnavailable": "Page details unavailable.",
   "bookmarks.moreTags": "Show {count} more tags",
   "bookmarks.new": "New bookmark",
   "bookmarks.noMatches": "No matches.",

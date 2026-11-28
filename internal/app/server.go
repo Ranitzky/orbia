@@ -28,13 +28,14 @@ type Server struct {
 	importActive    atomic.Bool
 	updateAvailable atomic.Bool
 	sourceClient    *http.Client
+	metadataClient  *http.Client
 }
 
 func NewServer(s *Store, c Config) *Server {
 	assets, _ := fs.Sub(web.Files, "static")
 	return &Server{
 		store: s, auth: newAuth(s, c.SecureCookie, c.Origin), static: http.FileServer(http.FS(assets)),
-		sourceClient: newLinkdingClient(),
+		sourceClient: newLinkdingClient(), metadataClient: newBookmarkMetadataClient(),
 	}
 }
 func writeJSON(w http.ResponseWriter, status int, v any) {
@@ -202,6 +203,9 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(path, "/")
 	method := r.Method
 	switch path {
+	case "api/orbia/bookmark-metadata":
+		s.lookupBookmarkMetadata(w, r)
+		return
 	case "api/orbia/update":
 		if method != "GET" {
 			w.WriteHeader(405)

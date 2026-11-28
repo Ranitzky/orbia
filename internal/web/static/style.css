@@ -434,14 +434,17 @@ main:has(> #dashboard-view:not([hidden])),
     transform 0.2s;
 }
 .group-card::before {
-  content: "";
   position: absolute;
   inset: 0;
-  pointer-events: none;
-  border: 2px solid var(--group-color);
   border-radius: calc(var(--radius) - 1px);
+}
+.group-card::before,
+.bookmark-metadata-fields[data-fetch-glow] label::after {
+  content: "";
+  pointer-events: none;
+  border: 2px solid var(--group-color, var(--accent));
   mask-image: radial-gradient(
-    ellipse 66% calc(3.5rem + var(--group-glow-spread, 0px))
+    ellipse 66% var(--glow-height, calc(3.5rem + var(--group-glow-spread, 0px)))
       at var(--group-glow-x, 0%) var(--group-glow-y, 0%),
     black,
     rgb(0 0 0 / 65%) 36%,
@@ -1074,6 +1077,52 @@ dialog::backdrop {
   font-size: 0.75rem;
   color: var(--muted);
   margin-top: 2px;
+}
+.bookmark-metadata-fields {
+  display: grid;
+  gap: inherit;
+}
+#bookmark-metadata-status {
+  margin-block: -5px;
+  padding: 6px 10px;
+  border-inline-start: 3px solid currentColor;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--danger);
+  background-color: color-mix(in srgb, currentColor 9%, var(--panel));
+}
+#bookmark-metadata-status:empty {
+  display: none;
+}
+.bookmark-metadata-fields label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.bookmark-metadata-fields :is(input, textarea),
+.bookmark-metadata-fields[data-fetch-glow] label::after {
+  grid-area: 2 / 1;
+}
+.bookmark-metadata-fields[data-fetch-glow] label::after {
+  --glow-height: 90%;
+  position: relative;
+  border-radius: 6px;
+  animation: bookmark-metadata-glow 1.8s linear infinite;
+}
+.bookmark-metadata-fields[data-fetch-glow="fading"] label::after {
+  opacity: 0;
+  animation: bookmark-metadata-glow 1.8s linear infinite,
+    bookmark-metadata-fade 800ms ease-out both;
+}
+@keyframes bookmark-metadata-fade {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes bookmark-metadata-glow {
+  0%, 100% { --group-glow-x: 0%; --group-glow-y: 0%; }
+  35% { --group-glow-x: 100%; --group-glow-y: 0%; }
+  50% { --group-glow-x: 100%; --group-glow-y: 100%; }
+  85% { --group-glow-x: 0%; --group-glow-y: 100%; }
 }
 .dialog-actions {
   padding: 20px 26px 24px;

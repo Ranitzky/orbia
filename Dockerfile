@@ -1,7 +1,7 @@
 FROM golang:1.26-alpine3.23 AS build
 RUN apk add --no-cache gcc musl-dev sqlite-dev
 WORKDIR /src
-COPY go.mod ./
+COPY go.mod go.sum ./
 COPY cmd ./cmd
 COPY internal ./internal
 ARG ORBIA_REVISION
