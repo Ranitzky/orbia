@@ -4,9 +4,14 @@
   "type": "module",
   "scripts": {
     "test": "go test ./...",
-    "test:e2e": "node --test --test-concurrency=1 tests/e2e.test.mjs",
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e.test.ts",
+    "check:e2e": "tsc -p tests/tsconfig.json",
     "check": "node --check internal/web/static/app.js",
     "dev": "go run ./cmd/orbia"
   },
-  "devDependencies": { "playwright": "1.62.1" }
+  "devDependencies": {
+    "@types/node": "^24.19.4",
+    "playwright": "1.62.1",
+    "typescript": "^7.0.2"
+  }
 }

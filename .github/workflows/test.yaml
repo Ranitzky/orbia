@@ -23,6 +23,7 @@ jobs:
       - run: go vet ./...
       - run: npm run check
       - run: npm ci --ignore-scripts
+      - run: npm run check:e2e
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: docker build -t orbia:test .

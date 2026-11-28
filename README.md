@@ -132,11 +132,12 @@ go test -race ./...
 go vet ./...
 npm ci
 npm run check
+npm run check:e2e
 npx playwright install chromium webkit
 npm run test:e2e
 ORBIA_BROWSER=webkit npm run test:e2e
 ```
 
-Node and Playwright are development dependencies. The browser suite starts the real HTTP handler on a temporary loopback port with its own SQLite database. `ORBIA_SCREENSHOTS` selects an optional output directory. `PLAYWRIGHT_EXECUTABLE` can select an installed browser binary.
+The browser suite uses Node.js 24 or later and runs the TypeScript tests directly. Playwright and TypeScript are development dependencies. The entry point in `tests/e2e.test.ts` loads the scenarios in `tests/e2e/` in order. They share a real HTTP handler on a temporary loopback port with its own SQLite database. `ORBIA_SCREENSHOTS` selects an optional output directory. `PLAYWRIGHT_EXECUTABLE` can select an installed browser binary.
 
 See the [architecture and design decisions](docs/architecture.md), [feature status](docs/status.md) and [validation report](docs/validation.md) for test evidence and deployment limits.
