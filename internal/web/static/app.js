@@ -293,7 +293,9 @@ function setMode(mode) {
       : "/",
   );
   if (mode === "bookmarks") {
-    $("#bookmark-query").value = state.query;
+    const query = $("#bookmark-query");
+    query.value = state.query;
+    query.focus();
     loadBookmarks();
   } else renderDashboard();
 }

@@ -102,6 +102,10 @@ test("main navigation highlights only the current view", async () => {
     assert.equal(await button.locator("span").innerText(), name);
     await button.click();
     await page.locator(name === "Bookmarks" ? "#bookmark-view" : "#dashboard-view").waitFor();
+    if (name === "Bookmarks") {
+      await page.keyboard.type("Dresden");
+      assert.equal(await page.locator("#bookmark-query").inputValue(), "Dresden");
+    }
     assert.equal(await nav.locator(".active").count(), 1);
     assert.ok(await button.evaluate(el => el.classList.contains("active")));
     assert.equal(await nav.locator('[aria-current="page"]').count(), 1);
@@ -173,7 +177,7 @@ test("dashboard and bookmarks keyboard shortcuts switch views and appear in sett
     await page.keyboard.press(`${modifier}+b`);
     await page.waitForURL(`${origin}/bookmarks`);
     await page.locator("#bookmark-view").waitFor();
-    await page.locator("#bookmark-query").focus();
+    assert.equal(await page.locator("#bookmark-query").evaluate(el => document.activeElement === el), true);
     await page.keyboard.press(`${modifier}+d`);
     await page.waitForURL(`${origin}/`);
     await page.locator("#dashboard-view").waitFor();
@@ -708,6 +712,7 @@ test("Linkding omnibox opens its query and Raycast opens the editor by ID", asyn
       document.querySelector("#bookmark-count").textContent === "1 Bookmark",
   );
   assert.equal(await page.locator("#bookmark-query").inputValue(), "#dresden");
+  assert.equal(await page.locator("#bookmark-query").evaluate(el => document.activeElement === el), true);
   const id = await page
     .locator("[data-edit-bookmark]")
     .getAttribute("data-edit-bookmark");
