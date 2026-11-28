@@ -1,0 +1,25 @@
+<dialog id="editor-dialog" class="editor-dialog" aria-labelledby="editor-title">
+  <form id="editor-form">
+    <div class="dialog-heading">
+      <h2 id="editor-title"></h2>
+      <button type="button" class="icon-button" data-close="editor-dialog" data-i18n-aria-label="common.closeDialog">
+        <svg>
+          <use href="#i-close" />
+        </svg>
+      </button>
+    </div>
+    <div id="editor-fields" class="editor-fields"></div>
+    <p id="editor-error" class="form-error" role="alert"></p>
+    <div id="delete-confirm" class="delete-confirm" hidden>
+      <span data-i18n="editor.deleteWarning"></span>
+      <button type="button" class="button danger" id="confirm-delete" data-i18n="editor.confirmDelete"></button>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="text-button danger-text" id="delete-button" hidden data-i18n="common.delete"></button>
+      <div>
+        <button type="button" class="button" data-close="editor-dialog" data-i18n="common.cancel"></button>
+        <button type="submit" class="button primary" id="save-button" data-i18n="common.save"></button>
+      </div>
+    </div>
+  </form>
+</dialog>

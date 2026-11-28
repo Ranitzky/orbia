@@ -1,0 +1,20 @@
+<section id="dashboard-view" data-i18n-aria-label="dashboard.quickDashboard">
+  <div class="dashboard-toolbar" id="dashboard-toolbar" hidden>
+    <div class="page-tabs" id="page-tabs" role="tablist" data-i18n-aria-label="dashboard.pageTabs"></div>
+  </div>
+  <div class="edit-bar" id="edit-bar" hidden>
+    <span data-i18n="dashboard.dragHint"></span>
+    <div>
+      <button class="text-button" data-action="new-group" data-i18n="dashboard.addGroup"></button>
+      <button class="text-button" data-action="new-page" data-i18n="dashboard.addPage"></button>
+      <button class="button small-button" data-action="new-link">
+        <svg>
+          <use href="#i-plus" />
+        </svg><span data-i18n="dashboard.quicklink"></span>
+      </button>
+      <button class="text-button" data-action="edit-page" data-i18n="dashboard.editPage"></button>
+    </div>
+  </div>
+  <div id="groups" class="groups-grid"></div>
+  <div id="quick-status" class="quick-status" role="status"></div>
+</section>

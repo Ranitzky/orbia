@@ -1,0 +1,135 @@
+<dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
+  <div class="dialog-heading">
+    <h2 id="settings-title" data-i18n="settings.title"></h2>
+    <button class="icon-button" data-close="settings-dialog" data-i18n-aria-label="settings.close">
+      <svg>
+        <use href="#i-close" />
+      </svg>
+    </button>
+  </div>
+  <div role="status">
+    <div id="update-notice" class="settings-section update-notice" hidden>
+      <span data-i18n="update.available"></span>
+      <a href="https://github.com/Ranitzky/orbia#update-orbia" target="_blank" rel="noopener noreferrer"
+        data-i18n="update.instructions"></a>
+    </div>
+  </div>
+  <section class="settings-section settings-general">
+    <label for="language" data-i18n="settings.language"></label>
+    <select id="language">
+      <option value="de" lang="de">Deutsch</option>
+      <option value="en" lang="en" selected>English</option>
+    </select>
+    <button class="button" data-action="theme">
+      <svg>
+        <use href="#i-sun" />
+      </svg><span id="theme-label"></span>
+    </button>
+    <div class="link-target-setting">
+      <label for="dashboard-target" data-i18n="settings.dashboardLinks"></label>
+      <select id="dashboard-target">
+        <option value="_self" data-i18n="settings.sameTab"></option>
+        <option value="_blank" data-i18n="settings.newTab"></option>
+      </select>
+    </div>
+    <div class="link-target-setting">
+      <label for="bookmark-target" data-i18n="settings.bookmarkLinks"></label>
+      <select id="bookmark-target">
+        <option value="_self" data-i18n="settings.sameTab"></option>
+        <option value="_blank" data-i18n="settings.newTab"></option>
+      </select>
+    </div>
+    <p id="language-status" class="small error" role="status" hidden></p>
+  </section>
+
+  <details name="settings-group" class="settings-section" id="access-settings">
+    <summary data-i18n="access.title"></summary>
+    <form id="access-form" class="integration-form" method="post">
+      <div id="current-password-field" hidden><label for="current-password" data-i18n="access.currentPassword"></label>
+        <input id="current-password" type="password" autocomplete="current-password" />
+      </div>
+      <label for="access-mode" data-i18n="access.signInMethod"></label>
+      <select id="access-mode">
+        <option value="password" data-i18n="access.requirePassword"></option>
+        <option value="open" data-i18n="access.passwordless"></option>
+      </select>
+      <p id="open-access-hint" class="error" hidden data-i18n="access.passwordlessWarning"></p>
+      <div id="new-password-field"><label for="new-password" data-i18n="access.newPassword"></label>
+        <input id="new-password" type="password" minlength="12" autocomplete="new-password" />
+      </div>
+      <button type="submit" class="button" data-i18n="access.save"></button>
+      <p id="access-status" class="small" role="status"></p>
+    </form>
+  </details>
+  <details name="settings-group" class="settings-section">
+    <summary data-i18n="tokens.title"></summary>
+    <p data-i18n="tokens.instructions"></p>
+    <div class="copy-field">
+      <code id="server-url"></code>
+      <button type="button" class="text-button copy-button" data-action="copy-url" data-i18n-aria-label="common.copy">
+        <span aria-hidden="true" data-i18n="common.copy"></span>
+        <svg aria-hidden="true"><use href="#i-check" /></svg>
+      </button>
+    </div>
+    <p id="server-url-status" class="small copy-status" role="status"></p>
+    <form class="integration-form" id="token-form" method="post">
+      <label for="token-name" data-i18n="tokens.appName"></label>
+      <input id="token-name" required maxlength="80" data-i18n-placeholder="tokens.appPlaceholder" />
+      <button class="button" type="submit" data-i18n="tokens.create"></button>
+    </form>
+    <div id="new-token" hidden>
+      <label for="token-value" data-i18n="tokens.newToken"></label>
+      <div class="copy-field"><input id="token-value" readonly autocomplete="off" spellcheck="false" />
+        <button type="button" class="text-button copy-button" data-action="copy-token" data-i18n-aria-label="common.copy">
+          <span aria-hidden="true" data-i18n="common.copy"></span>
+          <svg aria-hidden="true"><use href="#i-check" /></svg>
+        </button>
+      </div>
+      <p id="token-copy-status" class="small copy-status" role="status"></p>
+    </div>
+    <div id="token-list"></div>
+    <p id="token-status" class="small" role="status"></p>
+  </details>
+  <details name="settings-group" class="settings-section">
+    <summary data-i18n="linkding.title"></summary>
+    <p data-i18n="linkding.instructions"></p>
+    <form class="integration-form" id="pull-form" method="post">
+      <label for="source-url" data-i18n="linkding.server"></label>
+      <input id="source-url" type="url" required aria-describedby="source-hint"
+        placeholder="http://192.168.1.20:9090" />
+      <p id="source-hint" class="small muted" data-i18n="linkding.httpWarning"></p>
+      <label for="source-token" data-i18n="linkding.apiToken"></label>
+      <input id="source-token" type="password" required autocomplete="off" />
+      <button class="button" type="submit" data-i18n="linkding.startImport"></button>
+    </form>
+    <p id="pull-status" role="status" class="small"></p>
+  </details>
+  <details name="settings-group" class="settings-section">
+    <summary data-i18n="backup.title"></summary>
+    <p data-i18n="backup.instructions"></p>
+    <div class="transfer-actions">
+      <a class="button" href="/api/orbia/export?format=html" download data-i18n="backup.exportHtml"></a>
+      <a class="button" href="/api/orbia/export" download data-i18n="backup.exportJson"></a>
+      <label class="button file-button" for="import-file">
+        <span data-i18n="backup.importFile"></span><input id="import-file" type="file" accept=".html,.htm,.json" />
+      </label>
+    </div>
+    <p id="import-status" class="small" role="status"></p>
+  </details>
+  <details name="settings-group" class="settings-section">
+    <summary data-i18n="keyboard.title"></summary>
+    <div class="shortcut-list">
+      <span data-i18n="commands.openDashboard"></span><kbd>⌘ / Ctrl D</kbd>
+      <span data-i18n="commands.openBookmarks"></span><kbd>⌘ / Ctrl B</kbd>
+      <span data-i18n="keyboard.findCode"></span><kbd>A–Z</kbd>
+      <span data-i18n="keyboard.switchPage"></span><kbd>1–9</kbd>
+      <span data-i18n="common.edit"></span><kbd>⌘ / Ctrl E</kbd>
+      <span data-i18n="common.add"></span><kbd>+</kbd>
+      <span data-i18n="keyboard.searchBookmarks"></span><kbd>⌘ / Ctrl P</kbd>
+      <span data-i18n="keyboard.searchByTag"></span><kbd>#</kbd>
+      <span data-i18n="keyboard.openCommands"></span><kbd>⌘ / Ctrl K</kbd>
+      <span data-i18n="keyboard.closeOrClear"></span><kbd>Esc</kbd>
+    </div>
+  </details>
+  <button class="text-button danger-text logout" data-action="logout" data-i18n="auth.signOut"></button>
+</dialog>

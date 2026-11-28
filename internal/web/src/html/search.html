@@ -1,0 +1,23 @@
+<dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">
+  <div class="search-dialog-heading">
+    <h2 id="search-title" data-i18n="search.title"></h2>
+    <button class="icon-button" data-close="search-dialog" data-i18n-aria-label="search.close">
+      <svg>
+        <use href="#i-close" />
+      </svg>
+    </button>
+  </div>
+  <div class="search-field large-search">
+    <svg>
+      <use href="#i-search" />
+    </svg><input id="panel-query" aria-describedby="panel-count" type="search" data-i18n-aria-label="search.title"
+      data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false" /><kbd>esc</kbd>
+  </div>
+  <div id="panel-tags" class="panel-tags" data-i18n-aria-label="search.matchingTags"></div>
+  <div id="panel-count" class="sr-only" role="status"></div>
+  <div id="panel-results" class="panel-results"></div>
+  <div class="panel-footer">
+    <span><kbd>↑</kbd><kbd>↓</kbd> <span data-i18n="keyboard.select"></span> <kbd>↵</kbd> <span data-i18n="keyboard.open"></span></span>
+    <button class="text-button" data-action="all-results" data-i18n="search.allResults"></button>
+  </div>
+</dialog>

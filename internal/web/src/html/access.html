@@ -1,0 +1,19 @@
+<section id="login" class="login-screen" hidden>
+  <form id="login-form" class="login-card" method="post">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">[·]</span><span>Orbia</span>
+    </div>
+    <p class="login-intro" data-i18n="auth.signInHint"></p>
+    <label for="password" data-i18n="auth.password"></label>
+    <input id="password" name="password" type="password" required autocomplete="current-password"
+      data-i18n-placeholder="auth.passwordPlaceholder" />
+    <p id="login-error" class="form-error" role="alert"></p>
+    <button class="button primary" type="submit" data-i18n="auth.signIn"></button>
+  </form>
+</section>
+
+<section id="setup-screen" class="login-screen" hidden>
+  <div class="login-card" id="setup-container">
+    <h1 data-i18n="auth.setupTitle"></h1>
+  </div>
+</section>

@@ -8,7 +8,7 @@ Dashboard pages and bookmarks are separate concepts. Keys 1–9 select dashboard
 
 ## Runtime
 
-One long-running Go process serves the API and embedded static assets. There is no JavaScript build step and no Node runtime in production. Files in `internal/web/static` are embedded into the binary. A local JetBrains Mono font removes a third-party font request and works offline after loading the app.
+One long-running Go process serves the API and embedded static assets. During development, esbuild bundles the framework-free TypeScript modules into one `app.js`, and the build script assembles the HTML partials into one page. The page references the bundle by content hash. The browser loads the selected language catalog separately. Go embeds the checked-in output from `internal/web/static` into the binary, so native and Docker builds need only the Go toolchain and its native dependencies. A local JetBrains Mono font removes a third-party font request and works offline after loading the app.
 
 SQLite is the only persistent service. Orbia links the system SQLite library directly through cgo. `internal/sqlite` owns prepared statements, bindings, row decoding and transactions through a small cgo API. It deliberately does not implement a general `database/sql` driver. This reduces dependencies but makes the native boundary an explicit maintenance responsibility. It requires a C compiler and SQLite headers when building and a compatible SQLite library at runtime. Use a native Docker build for each architecture; ordinary `CGO_ENABLED=0` cross-compilation does not work.
 
@@ -47,7 +47,7 @@ Dashboard writes include the revision that was read. A stale update returns 409;
 - `internal/app/bookmark_metadata.go`: on-demand page metadata requests and HTML parsing.
 - `internal/app/auth.go`: login, token checks, session issuance/revocation and origin checks.
 - `internal/app/transfer.go`: consistent export and transactional merge import.
-- `internal/web`: buildless browser application and local assets.
+- `internal/web`: TypeScript feature modules and HTML partials in `src`, with browser-ready files in `static`.
 
 New database migrations should advance `PRAGMA user_version`. The server refuses a database created by a newer schema. Back up the database before upgrading. Schema version 4 adds persisted web access settings.
 

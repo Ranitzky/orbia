@@ -1,0 +1,54 @@
+<section id="bookmark-view" data-i18n-aria-label="navigation.bookmarks" hidden>
+  <div class="bookmark-heading">
+    <div>
+      <h1><span data-i18n="navigation.bookmarks"></span><span class="accent">.</span></h1>
+    </div>
+    <button class="button primary" data-action="new-bookmark" data-i18n-aria-label="bookmarks.add">
+      <svg>
+        <use href="#i-plus" />
+      </svg><span data-i18n="bookmarks.add"></span>
+    </button>
+  </div>
+  <div class="bookmark-toolbar">
+    <div class="search-field">
+      <svg>
+        <use href="#i-search" />
+      </svg><input id="bookmark-query" data-i18n-aria-label="bookmarks.filter" type="search"
+        data-i18n-placeholder="bookmarks.searchPlaceholder" autocomplete="off" spellcheck="false" /><kbd>/</kbd>
+    </div>
+    <button class="button" id="archive-toggle" data-action="archive-view" aria-pressed="false">
+      <svg>
+        <use href="#i-archive" />
+      </svg><span data-i18n="bookmarks.archive"></span>
+    </button>
+    <button class="button" id="unread-toggle" data-action="unread-view" aria-pressed="false" data-i18n="bookmarks.unread"></button>
+    <div class="view-switch" role="group" data-i18n-aria-label="bookmarks.view">
+      <button class="icon-button" data-action="grid" id="grid-view" data-i18n-aria-label="bookmarks.gridView"
+        aria-pressed="true">
+        <svg>
+          <use href="#i-grid" />
+        </svg></button><button class="icon-button" data-action="list" id="list-view" data-i18n-aria-label="bookmarks.listView"
+        aria-pressed="false">
+        <svg>
+          <use href="#i-list" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="bookmark-layout">
+    <aside class="tag-sidebar" data-i18n-aria-label="bookmarks.tagNavigation">
+      <div class="sidebar-heading">
+        <span data-i18n="bookmarks.tagsHeading"></span>
+        <button class="text-button" data-action="clear-filters" data-i18n="bookmarks.clearFilters"></button>
+      </div>
+      <div id="bookmark-tags"></div>
+    </aside>
+    <div class="bookmark-content">
+      <div class="results-heading">
+        <span id="bookmark-count" role="status"></span><span class="small muted" data-i18n="bookmarks.searchFields"></span>
+      </div>
+      <div id="bookmarks" class="bookmark-grid"></div>
+      <button id="load-more" class="button load-more" data-action="load-more" hidden data-i18n="bookmarks.loadMore"></button>
+    </div>
+  </div>
+</section>

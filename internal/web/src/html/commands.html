@@ -1,0 +1,18 @@
+<dialog id="command-dialog" class="command-dialog" aria-labelledby="command-title">
+  <div class="search-field large-search">
+    <svg>
+      <use href="#i-command" />
+    </svg><label for="command-query" class="sr-only" id="command-title" data-i18n="commands.title"></label><input id="command-query"
+      data-i18n-placeholder="commands.placeholder" autocomplete="off" /><button class="icon-button" data-close="command-dialog"
+      data-i18n-aria-label="commands.close">
+      <svg>
+        <use href="#i-close" />
+      </svg>
+    </button>
+  </div>
+  <div id="commands" class="commands"></div>
+  <div id="command-status" class="sr-only" role="status"></div>
+  <div class="panel-footer">
+    <span><kbd>↑</kbd><kbd>↓</kbd> <span data-i18n="keyboard.select"></span> <kbd>↵</kbd> <span data-i18n="keyboard.run"></span></span><span class="muted small">Orbia</span>
+  </div>
+</dialog>

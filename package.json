@@ -6,11 +6,13 @@
     "test": "go test ./...",
     "test:e2e": "node --test --test-concurrency=1 tests/e2e.test.ts",
     "check:e2e": "tsc -p tests/tsconfig.json",
-    "check": "node --check internal/web/static/app.js",
-    "dev": "go run ./cmd/orbia"
+    "check": "tsc -p internal/web/tsconfig.json && node scripts/build-web.ts --check",
+    "dev": "go run ./cmd/orbia",
+    "build:web": "node scripts/build-web.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.4",
+    "esbuild": "0.28.2",
     "playwright": "1.62.1",
     "typescript": "^7.0.2"
   }

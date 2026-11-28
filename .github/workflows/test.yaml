@@ -21,8 +21,8 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - run: go test -race ./...
       - run: go vet ./...
-      - run: npm run check
       - run: npm ci --ignore-scripts
+      - run: npm run check
       - run: npm run check:e2e
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

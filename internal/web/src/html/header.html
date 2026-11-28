@@ -1,0 +1,27 @@
+<header class="header">
+  <button class="brand brand-button" data-action="dashboard" data-i18n-aria-label="navigation.orbiaDashboard">
+    <span class="brand-mark" aria-hidden="true">[·]</span><span>Orbia</span>
+  </button>
+  <nav class="main-nav" data-i18n-aria-label="navigation.main">
+    <button class="nav-item active" id="nav-dashboard" data-action="dashboard"><svg aria-hidden="true">
+        <use href="#i-grid" />
+      </svg><span data-i18n="navigation.dashboard"></span></button>
+    <button class="nav-item" id="nav-bookmarks" data-action="bookmarks"><svg aria-hidden="true">
+        <use href="#i-bookmark" />
+      </svg><span data-i18n="navigation.bookmarks"></span></button>
+  </nav>
+  <div class="header-actions">
+    <button class="nav-item" data-action="search" data-i18n-aria-label="search.title"><svg aria-hidden="true">
+        <use href="#i-search" />
+      </svg></button>
+    <button class="nav-item" data-action="command" data-i18n-aria-label="commands.title"><svg aria-hidden="true">
+        <use href="#i-command" />
+      </svg></button>
+    <button id="settings-button" class="icon-button" data-action="settings" data-i18n-aria-label="settings.title">
+      <svg aria-hidden="true"><use href="#i-settings" /></svg>
+      <span id="settings-update-indicator" class="settings-update-indicator" hidden>
+        <span class="sr-only" data-i18n="update.available"></span>
+      </span>
+    </button>
+  </div>
+</header>

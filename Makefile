@@ -7,6 +7,6 @@ test:
 	go test -race ./...
 check:
 	go vet ./...
-	node --check internal/web/static/app.js
+	npm run check
 e2e:
 	npm run test:e2e

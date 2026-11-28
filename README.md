@@ -85,7 +85,7 @@ When you enter a URL for a new bookmark, Orbia waits for a domain name that reso
 
 Orbia loads the active language catalog on demand and switches languages in place. Search uses the same API, SQLite indexes and debounce settings in both languages.
 
-The German and English catalogs in `internal/web/static/de.js` and `internal/web/static/en.js` share stable keys such as `settings.title`. Use `data-i18n` for static text, `data-i18n-aria-label`, `data-i18n-placeholder`, or `data-i18n-content` for translated attributes, and `t(key, values)` for text rendered by JavaScript. When adding a message, include the same key and named placeholders in both catalogs. To add a language, create its catalog, register its loader in `app.js`, and add it to the language selector in `index.html`.
+The German and English catalogs in `internal/web/static/de.js` and `internal/web/static/en.js` share stable keys such as `settings.title`. Use `data-i18n` for static text, `data-i18n-aria-label`, `data-i18n-placeholder`, or `data-i18n-content` for translated attributes, and `t(key, values)` for text rendered by JavaScript. When adding a message, include the same key and named placeholders in both catalogs. To add a language, create its catalog, register its loader in `internal/web/src/language.ts`, and add it to the language selector in `internal/web/src/html/settings.html`.
 
 ## Keyboard and touch
 
@@ -127,6 +127,12 @@ For a full backup with stable IDs, stop the container, copy its **entire** data 
 
 A native build requires Go 1.26+, a C compiler, SQLite headers and a library with FTS5. On Debian/Ubuntu install `build-essential libsqlite3-dev`. Run `go run ./cmd/orbia` and complete setup in the browser. The native process reads its environment. Compose reads `.env`.
 
+Edit the browser code in `internal/web/src/`. The entry point is `main.ts`. Dashboard, bookmarks, search, editors and settings each own their UI state and events. The page shell in `internal/web/src/html/index.html` includes the views, dialogs and navigation from the same directory.
+
+After changing TypeScript or HTML, run `npm ci` once with Node.js 24 or later, then `npm run build:web`. Commit the regenerated `internal/web/static/app.js` and `internal/web/static/index.html` with the source changes. Restart the Go process to serve the new embedded assets. A fresh checkout can run or build Orbia with Go or Docker alone.
+
+`npm run check` type-checks the browser code and verifies that both generated files match their sources. The CI workflow runs the same check.
+
 ```sh
 go test -race ./...
 go vet ./...
@@ -138,6 +144,6 @@ npm run test:e2e
 ORBIA_BROWSER=webkit npm run test:e2e
 ```
 
-The browser suite uses Node.js 24 or later and runs the TypeScript tests directly. Playwright and TypeScript are development dependencies. The entry point in `tests/e2e.test.ts` loads the scenarios in `tests/e2e/` in order. They share a real HTTP handler on a temporary loopback port with its own SQLite database. `ORBIA_SCREENSHOTS` selects an optional output directory. `PLAYWRIGHT_EXECUTABLE` can select an installed browser binary.
+The browser suite uses Node.js 24 or later and runs the TypeScript tests directly. Playwright, TypeScript and esbuild are development dependencies. The entry point in `tests/e2e.test.ts` loads the scenarios in `tests/e2e/` in order. They share a real HTTP handler on a temporary loopback port with its own SQLite database. `ORBIA_SCREENSHOTS` selects an optional output directory. `PLAYWRIGHT_EXECUTABLE` can select an installed browser binary.
 
 See the [architecture and design decisions](docs/architecture.md), [feature status](docs/status.md) and [validation report](docs/validation.md) for test evidence and deployment limits.
