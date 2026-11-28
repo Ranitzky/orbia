@@ -81,7 +81,7 @@ Orbia opens in English by default. Choose **Settings → Language → Deutsch** 
 
 Unread bookmarks have a small dot beside their title in grid and list view. Choose **Unread** to filter the library, including search results, tag counts and archived bookmarks. Opening a bookmark from the library or the search panel marks it as read. You can mark it unread again in the bookmark editor.
 
-When you enter a URL for a new bookmark, Orbia waits for a domain name that resolves in DNS or a complete IP address before fetching the page's title and description from a public HTTP or HTTPS site. Pasting a complete URL starts the lookup and the colored outlines immediately. When you type a URL, the outlines appear once Orbia sends the request to the site. The outlines fade as soon as the lookup finishes. Both fields stay editable. If the page is unavailable or has no metadata, you can still save the bookmark and enter the details yourself.
+When you enter a URL for a new bookmark, Orbia waits for a domain name that resolves in DNS or a complete IP address before fetching the page's title and description from a public HTTP or HTTPS site. Pasting a complete URL starts the lookup and the colored outlines immediately. When you type a URL, the outlines appear once Orbia sends the request to the site. The outlines fade as soon as the lookup finishes. Both fields stay editable. If the page is unavailable or has no metadata, you can still save the bookmark and enter the details yourself. Orbia's automatic lookup runs when you create a bookmark in the web interface.
 
 Orbia loads the active language catalog on demand and switches languages in place. Search uses the same API, SQLite indexes and debounce settings in both languages.
 

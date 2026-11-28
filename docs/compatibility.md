@@ -28,7 +28,7 @@ Firefox and Chrome 1.15.1 contain the same HTTP client. The popup checks exact s
 | Delete the current bookmark | `DELETE /api/bookmarks/<id>/` must return 204. |
 | Search in the address bar | Suggestions call `GET /api/bookmarks/?q=<encoded-text>&limit=5`. Selecting a suggestion opens its URL. Submitting free text opens the HTML page `/bookmarks?q=<encoded-text>`. |
 
-The popup can take the title and description from the active tab or from the server's check response. Its cache uses `metadata.url` to identify a matching tab. SingleFile invokes a separate browser extension with its own upload settings. [Popup form][popup] · [Metadata cache][cache] · [Address bar and badge][background] · [SingleFile settings][options]
+The popup can take the title and description from the active tab or from the server's check response. Orbia returns empty metadata fields in that response. Orbia's new-bookmark editor uses its own metadata endpoint. Its cache uses `metadata.url` to identify a matching tab. SingleFile invokes a separate browser extension with its own upload settings. [Popup form][popup] · [Metadata cache][cache] · [Address bar and badge][background] · [SingleFile settings][options]
 
 ## Verification scope
 

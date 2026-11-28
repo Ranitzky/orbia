@@ -26,9 +26,9 @@ Bookmark responses include the common fields plus nullable media/legacy fields. 
 
 ## Chrome and Firefox extensions
 
-The official extension client uses bookmark POST for create/edit, URL check, tags, profile and search. Those routes and expected statuses are included in Go contract tests. Its scraping/snapshot-disable parameters are accepted; Orbia does not perform either operation. [Official extension API client](https://github.com/sissbruecker/linkding-extension/blob/master/src/linkding.js).
+The official extension client uses bookmark POST for create/edit, URL check, tags, profile and search. Those routes and expected statuses are included in Go contract tests. Orbia accepts the extension's scraping and snapshot flags on bookmark saves. These saves use the title and description supplied by the client. [Official extension API client](https://github.com/sissbruecker/linkding-extension/blob/master/src/linkding.js).
 
-Configure the **server root** and token. Test an actual Chrome and Firefox installation before relying on migration. Live extension testing was not available here. Empty scraped metadata means the extension/browser must supply the title, or the user enters it. Normal browser-extension saving is the target; optional SingleFile snapshots and asset uploads are unsupported.
+Configure the **server root** and token. Test an actual Chrome and Firefox installation before relying on migration. Live extension testing was not available here. Orbia's URL check returns empty metadata fields. The extension can use the active tab's title and description, and users can enter those values manually. Normal browser-extension saving is the target; optional SingleFile snapshots and asset uploads are unsupported.
 
 ## Raycast
 
@@ -39,7 +39,7 @@ Raycast's search, create, archive and slashless delete requests are covered by c
 | Area | Limitation / consequence |
 | --- | --- |
 | Search grammar | No OR, NOT, grouping or lax tag mode. Unsupported operators return 400. Text uses word prefixes, not identical upstream matching. |
-| Metadata | No network scraping. `/check/` supplies empty title/description metadata. |
+| Metadata | `/check/` supplies empty title and description fields. Orbia fetches page metadata when creating bookmarks in its own web editor through `POST /api/orbia/bookmark-metadata`. |
 | Media | Favicon, preview, archive URL and legacy website fields are null. No assets or snapshots. |
 | Bundles | 501; `bundle` filter returns 501. Orbia pages are not Linkding bundles. |
 | Auto-tagging | No rules. `auto_tags` is empty. |

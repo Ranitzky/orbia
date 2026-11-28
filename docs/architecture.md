@@ -2,7 +2,7 @@
 
 ## Product boundaries
 
-Orbia has one owner and one bookmark library. It replaces Linkding for clients pointed at its base URL. There is no multi-server conflict resolution. The MVP indexes saved fields. Page crawling and snapshot storage would require a separate fetch worker and retention policy.
+Orbia has one owner and one bookmark library. It replaces Linkding for clients pointed at its base URL. There is no multi-server conflict resolution. Search indexes stored bookmark fields. When you create a bookmark in the web interface, Orbia can fill the title and description from the target page. Background crawling and snapshot storage are outside the product scope.
 
 Dashboard pages and bookmarks are separate concepts. Keys 1–9 select dashboard pages. Every page owns its groups and quicklinks; bookmark filters always refer to the shared library. A quicklink is not automatically a bookmark. Three-character codes are unique within their page, not globally.
 
@@ -44,6 +44,7 @@ Dashboard writes include the revision that was read. A stale update returns 409;
 - `internal/app/store.go`: bookmark validation, storage, search and tag operations.
 - `internal/app/dashboard.go`: dashboard aggregate and concurrency rules.
 - `internal/app/server.go`: Linkding-shaped routes and Orbia-specific endpoints.
+- `internal/app/bookmark_metadata.go`: on-demand page metadata requests and HTML parsing.
 - `internal/app/auth.go`: login, token checks, session issuance/revocation and origin checks.
 - `internal/app/transfer.go`: consistent export and transactional merge import.
 - `internal/web`: buildless browser application and local assets.
@@ -58,7 +59,9 @@ Token management and remote imports require a browser session. The Settings impo
 
 Login attempts use a bounded global bucket. Ten unsuccessful attempts within a minute block login until the next window. This avoids trusting spoofable proxy headers but means an attacker could temporarily block the owner's login; a reverse proxy can add stronger controls. API requests need a session or token. An explicitly invalid Authorization header cannot fall back to a valid cookie.
 
-Cookie-authenticated mutations validate Origin or reject cross-site Fetch Metadata. `ORBIA_ORIGIN` sets the canonical origin behind a proxy; otherwise the request Host is used. Extension CORS permits token-based requests from extension origins only, without credentialed cookies. The application does not enable arbitrary website CORS. Restrictive CSP, frame blocking, no-referrer and nosniff headers are set. User-provided HTML is escaped before insertion, URL schemes are limited to HTTP(S), and Orbia never fetches saved URLs on the server. There is no server-side URL preview or SSRF-capable crawler.
+Cookie-authenticated mutations validate Origin or reject cross-site Fetch Metadata. `ORBIA_ORIGIN` sets the canonical origin behind a proxy; otherwise the request Host is used. Extension CORS permits token-based requests from extension origins only, without credentialed cookies. The application does not enable arbitrary website CORS. Restrictive CSP, frame blocking, no-referrer and nosniff headers are set. The browser escapes user-provided HTML before insertion. Bookmark URLs are limited to HTTP(S).
+
+The new-bookmark editor requests page metadata through the browser-session endpoint `POST /api/orbia/bookmark-metadata`. The server uses a dedicated HTTP client with no proxy or forwarded user credentials. It resolves target hosts and connects directly to a checked public IP address. The same checks apply to new connections after redirects. The client allows up to five redirects, uses a four-second deadline, and reads up to 512 KiB of the HTML response body. It extracts title and description from HTML and Open Graph tags. The editor fills untouched fields, and saving the bookmark stores those values as ordinary bookmark fields.
 
 ## Visual decisions
 
